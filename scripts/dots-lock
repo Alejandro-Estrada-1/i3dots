@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Pywal-themed X11 lockscreen using i3lock-color (with graceful i3lock fallback).
+# Bound to Super + L and xss-lock.
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+# shellcheck source=lib/common.sh
+source "$REPO/scripts/lib/common.sh"
+
+# Default alpine-teal palette (overridden by Pywal template)
+WAL_BG="0b1518"
+WAL_FG="cdd8d5"
+WAL_ACCENT="7b9391"
+WAL_BORDER="8ea09d"
+WAL_MUTED="576c6e"
+WAL_URGENT="b86f6b"
+
+# shellcheck disable=SC1091
+[[ -r "$WAL_CACHE/lock-colors.sh" ]] && source "$WAL_CACHE/lock-colors.sh"
+
+command -v i3lock >/dev/null || exit 0
+
+# Detect i3lock-color features; fallback cleanly to plain i3lock if unavailable
+if i3lock --help 2>&1 | grep -q -- '--ring-color'; then
+    exec i3lock \
+        --nofork \
+        --blur=7 \
+        --clock \
+        --indicator \
+        --radius=110 \
+        --ring-width=4 \
+        --time-str="%H:%M" \
+        --date-str="%A, %d %B" \
+        --time-font="JetBrainsMono Nerd Font" \
+        --date-font="JetBrainsMono Nerd Font" \
+        --verif-font="JetBrainsMono Nerd Font" \
+        --wrong-font="JetBrainsMono Nerd Font" \
+        --time-size=32 \
+        --date-size=13 \
+        --time-color="${WAL_FG}ff" \
+        --date-color="${WAL_ACCENT}ff" \
+        --inside-color="${WAL_BG}cc" \
+        --ring-color="${WAL_BORDER}cc" \
+        --insidever-color="${WAL_BG}dd" \
+        --ringver-color="${WAL_ACCENT}ff" \
+        --insidewrong-color="${WAL_BG}dd" \
+        --ringwrong-color="${WAL_URGENT}ff" \
+        --line-uses-inside \
+        --keyhl-color="${WAL_FG}ff" \
+        --bshl-color="${WAL_URGENT}ff" \
+        --separator-color="${WAL_MUTED}ff" \
+        --verif-color="${WAL_FG}ff" \
+        --wrong-color="${WAL_URGENT}ff" \
+        --verif-text="" \
+        --wrong-text="" \
+        --noinput-text="" \
+        --pass-media-keys \
+        --pass-volume-keys \
+        --pass-screen-keys
+else
+    exec i3lock --nofork --color="$WAL_BG"
+fi

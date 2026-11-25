@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Bluetooth status icon for Polybar right island (matches the badge icon in the
+# reference screenshots). Supports `dots-bluetooth toggle` on right-click.
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+# shellcheck source=lib/common.sh
+source "$REPO/scripts/lib/common.sh"
+
+if [[ "${1:-}" == "toggle" ]]; then
+    if command -v bluetoothctl >/dev/null; then
+        if bluetoothctl show 2>/dev/null | grep -q "Powered: yes"; then
+            bluetoothctl power off >/dev/null 2>&1 || true
+        else
+            bluetoothctl power on >/dev/null 2>&1 || true
+        fi
+    fi
+    exit 0
+fi
+
+accent="#7b9391"
+muted="#576c6e"
+if [[ -r "$WAL_CACHE/polybar-colors.ini" ]]; then
+    a=$(sed -n 's/^accent[[:space:]]*=[[:space:]]*//p' "$WAL_CACHE/polybar-colors.ini" | head -n 1)
+    m=$(sed -n 's/^muted[[:space:]]*=[[:space:]]*//p' "$WAL_CACHE/polybar-colors.ini" | head -n 1)
+    [[ -n "$a" ]] && accent="$a"
+    [[ -n "$m" ]] && muted="$m"
+fi
+
+if command -v bluetoothctl >/dev/null && bluetoothctl show 2>/dev/null | grep -q "Powered: yes"; then
+    printf '%%{T2}%%{F%s}%%{F-}%%{T-}\n' "$accent"
+else
+    printf '%%{T2}%%{F%s}󰂲%%{F-}%%{T-}\n' "$muted"
+fi

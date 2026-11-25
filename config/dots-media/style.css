@@ -1,0 +1,122 @@
+/* ============================================================================
+ * Media Center Panel (scripts/dots-media) — i3dots X11 GTK3 Theme
+ * ============================================================================
+ * Styled to match the 3-island bottom Polybar: dark frosted glass background,
+ * crisp 1px Pywal border, 3px corner radius, JetBrainsMono Nerd Font.
+ * Color variables (@bg, @fg, @border, @accent, @muted, @urgent) are prepended
+ * at runtime from ~/.cache/wal/dots-media.css (or fallback colors.css).
+ */
+
+window.dots-media,
+window.dots-media.background {
+    background-color: transparent;
+    background-image: none;
+    box-shadow: none;
+}
+
+.panel {
+    padding: 14px 16px;
+    min-width: 340px;
+    background-color: alpha(@bg, 0.86);
+    border: 1px solid @border;
+    border-radius: 3px;
+    color: @fg;
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 13px;
+}
+
+.panel button,
+.panel progressbar trough,
+.panel progressbar progress {
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    text-shadow: none;
+    outline-style: none;
+}
+
+/* Player tabs */
+.tab {
+    padding: 3px 10px;
+    border-radius: 3px;
+    background-color: alpha(@bg, 0.65);
+    color: @fg;
+    border: 1px solid alpha(@muted, 0.7);
+    font-size: 12px;
+}
+
+.tab.active,
+.tab:hover {
+    background-color: @accent;
+    color: @bg;
+    border-color: @border;
+}
+
+/* Album art */
+.art-frame {
+    border-radius: 3px;
+    border: 1px solid alpha(@muted, 0.7);
+    background-color: alpha(@bg, 0.6);
+}
+
+.art-placeholder {
+    color: @accent;
+    font-size: 34px;
+}
+
+.title {
+    font-weight: bold;
+    font-size: 14px;
+    color: @fg;
+}
+
+.artist {
+    font-size: 12.5px;
+    color: @accent;
+}
+
+.source {
+    font-size: 11px;
+    color: alpha(@fg, 0.65);
+}
+
+/* Progress bar */
+.progress trough {
+    min-height: 4px;
+    border-radius: 2px;
+    background-color: alpha(@muted, 0.45);
+}
+
+.progress progress {
+    min-height: 4px;
+    border-radius: 2px;
+    background-color: @accent;
+}
+
+.time {
+    font-size: 11px;
+    color: alpha(@fg, 0.7);
+}
+
+/* Controls: Previous / Play-Pause / Next */
+.control {
+    min-width: 38px;
+    min-height: 32px;
+    padding: 0;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    background-color: transparent;
+    color: @accent;
+    font-size: 18px;
+}
+
+.control:hover {
+    background-color: @accent;
+    color: @bg;
+    border-color: @border;
+}
+
+.empty {
+    padding: 8px 4px;
+    color: @fg;
+}

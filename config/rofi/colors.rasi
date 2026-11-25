@@ -1,0 +1,11 @@
+/* Fallback Rofi palette (overridden by ~/.cache/wal/rofi-colors.rasi) */
+* {
+    bg:         #0b1518dc;
+    bg-solid:   #0b1518;
+    bg-alt:     #0f1d21f0;
+    fg:         #cdd8d5;
+    accent:     #7b9391;
+    border:     #8ea09d;
+    muted:      #576c6e;
+    urgent:     #b86f6b;
+}

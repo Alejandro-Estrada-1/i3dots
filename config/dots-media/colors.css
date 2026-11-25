@@ -1,0 +1,7 @@
+/* Fallback dots-media palette (overridden by ~/.cache/wal/dots-media.css) */
+@define-color bg     #0b1518;
+@define-color fg     #cdd8d5;
+@define-color border #8ea09d;
+@define-color accent #7b9391;
+@define-color muted  #576c6e;
+@define-color urgent #b86f6b;

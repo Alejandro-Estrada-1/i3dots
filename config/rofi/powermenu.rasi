@@ -1,0 +1,72 @@
+/* Rofi Power Menu — i3dots (Frosted Glass + 1px Border + Pywal) */
+@import "~/.cache/wal/rofi-colors.rasi"
+
+* {
+    font:             "JetBrainsMono Nerd Font 10";
+    background-color: transparent;
+    text-color:       @fg;
+    margin:           0px;
+    padding:          0px;
+    spacing:          0px;
+}
+
+window {
+    location:         center;
+    anchor:           center;
+    width:            520px;
+    border:           1px solid;
+    border-color:     @border;
+    border-radius:    3px;
+    background-color: @bg;
+    padding:          16px;
+}
+
+mainbox {
+    spacing:          14px;
+    children:         [ "message", "listview" ];
+}
+
+message {
+    padding:          6px 10px;
+    border:           1px solid;
+    border-color:     @muted;
+    border-radius:    3px;
+    background-color: @bg-alt;
+}
+
+textbox {
+    horizontal-align: 0.5;
+    text-color:       @fg;
+}
+
+listview {
+    columns:          5;
+    lines:            1;
+    spacing:          10px;
+    cycle:            true;
+    scrollbar:        false;
+    layout:           vertical;
+}
+
+element {
+    padding:          18px 0px;
+    border:           1px solid;
+    border-color:     @muted;
+    border-radius:    3px;
+    background-color: @bg-alt;
+    cursor:           pointer;
+}
+
+element selected.normal {
+    border-color:     @border;
+    background-color: @accent;
+    text-color:       @bg-solid;
+}
+
+element-text {
+    font:             "JetBrainsMono Nerd Font 20";
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+    text-color:       inherit;
+    cursor:           inherit;
+}

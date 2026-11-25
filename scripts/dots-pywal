@@ -1,0 +1,166 @@
+#!/usr/bin/env bash
+# Pywal color synchronization for i3dots (works alongside Nitrogen via `wal -n`).
+#
+# Regenerates all Pywal templates (~/.config/wal/templates/* -> ~/.cache/wal/*),
+# merges Xresources for i3 borders, updates Kitty, Cava, Dunst and Polybar live,
+# and reloads i3 without touching any tracked file inside the git repository.
+#
+# Usage:
+#   dots-pywal --restore                  restore cached palette at login (or generate if missing)
+#   dots-pywal --reload                   re-generate palette from active Nitrogen wallpaper
+#   dots-pywal --image <path> [opts]      generate palette from <path> (--light, --backend <name>)
+#   dots-pywal --random                   pick a random wallpaper (Nitrogen + Pywal)
+#   dots-pywal --menu                     interactive Rofi menu (Alt + C)
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+# shellcheck source=lib/common.sh
+source "$REPO/scripts/lib/common.sh"
+
+LIGHT=0
+BACKEND=""
+MODE="--reload"
+IMAGE=""
+
+while (($#)); do
+    case "$1" in
+        --restore) MODE="--restore" ;;
+        --reload)  MODE="--reload" ;;
+        --random)  MODE="--random" ;;
+        --menu)    MODE="--menu" ;;
+        --light)   LIGHT=1 ;;
+        --backend) BACKEND="${2:?missing backend name}"; shift ;;
+        --image)   MODE="--image"; IMAGE="${2:?missing image path}"; shift ;;
+        *)         MODE="--image"; IMAGE="$1" ;;
+    esac
+    shift
+done
+
+sync_cava_config() {
+    mkdir -p "$DOTS_CACHE"
+    if [[ -f "$WAL_CACHE/cava-colors" ]]; then
+        {
+            sed '/^# --- PYWAL_COLORS_BEGIN ---$/,$d' "$REPO/config/cava/config"
+            cat "$WAL_CACHE/cava-colors"
+        } >"$DOTS_CACHE/cava.conf"
+    else
+        cp "$REPO/config/cava/config" "$DOTS_CACHE/cava.conf"
+    fi
+    pkill -USR1 cava 2>/dev/null || true
+}
+
+apply_live_desktop() {
+    ensure_wal_fallbacks
+
+    # Merge Xresources so i3 set_from_resource borders pick up the new palette
+    if [[ -n "${DISPLAY:-}" ]] && command -v xrdb >/dev/null && [[ -f "$WAL_CACHE/colors.Xresources" ]]; then
+        xrdb -merge "$WAL_CACHE/colors.Xresources" 2>/dev/null || true
+    fi
+
+    # Update Cava runtime config & reload running instances
+    sync_cava_config
+
+    # Reload running Kitty instances cleanly
+    if [[ -f "$WAL_CACHE/kitty-colors.conf" ]]; then
+        pkill -USR1 kitty 2>/dev/null || true
+    fi
+
+    # Restart Dunst with freshly templated colors
+    if [[ -n "${DISPLAY:-}" ]] && command -v dunst >/dev/null; then
+        pkill -x dunst 2>/dev/null || true
+        dunst -conf "$WAL_CACHE/dunstrc" >/dev/null 2>&1 &
+        disown || true
+    fi
+
+    # Reload i3 borders & restart 3-island Polybar
+    if [[ -n "${DISPLAY:-}" ]]; then
+        command -v i3-msg >/dev/null && i3-msg reload >/dev/null 2>&1 || true
+        command -v polybar >/dev/null && "$REPO/scripts/dots-polybar" restart
+    fi
+}
+
+run_wal() {
+    local target=$1
+    [[ -f "$target" ]] || { echo "Wallpaper not found: $target" >&2; exit 1; }
+
+    if command -v wal >/dev/null; then
+        local args=(-n -q -i "$target")
+        (( LIGHT )) && args+=(-l)
+        [[ -n "$BACKEND" ]] && args+=(--backend "$BACKEND")
+        wal "${args[@]}"
+    fi
+    apply_live_desktop
+}
+
+pick_random_wallpaper() {
+    local dirs=("$REPO/wallpapers")
+    [[ -d "$HOME/Pictures/Wallpapers" ]] && dirs+=("$HOME/Pictures/Wallpapers")
+    [[ -d "$HOME/Imágenes/Wallpapers" ]] && dirs+=("$HOME/Imágenes/Wallpapers")
+
+    mapfile -t imgs < <(find "${dirs[@]}" -maxdepth 2 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) 2>/dev/null)
+    (( ${#imgs[@]} > 0 )) || { echo "No wallpapers found" >&2; exit 1; }
+
+    local chosen="${imgs[RANDOM % ${#imgs[@]}]}"
+    if [[ -n "${DISPLAY:-}" ]] && command -v nitrogen >/dev/null; then
+        nitrogen --set-zoom-fill --save "$chosen" >/dev/null 2>&1 || true
+    fi
+    run_wal "$chosen"
+    command -v notify-send >/dev/null && notify-send "i3dots · Pywal" "$(basename "$chosen")" || true
+}
+
+show_menu() {
+    ensure_wal_fallbacks
+    if pgrep -x rofi >/dev/null; then
+        pkill -x rofi
+        exit 0
+    fi
+
+    local opt_reload opt_random opt_nitrogen opt_dark opt_light opt_colorz opt_haishoku
+    opt_reload="󰑓  $(L "Sync colors from Nitrogen" "Sincronizar colores desde Nitrogen")"
+    opt_random="  $(L "Random wallpaper + Pywal" "Fondo aleatorio + Pywal")"
+    opt_nitrogen="󰸉  $(L "Open Nitrogen wallpaper picker" "Abrir selector Nitrogen")"
+    opt_dark="  $(L "Dark palette (default)" "Paleta oscura (por defecto)")"
+    opt_light="  $(L "Light palette" "Paleta clara")"
+    opt_colorz="  $(L "Backend: colorz" "Backend: colorz")"
+    opt_haishoku="  $(L "Backend: haishoku" "Backend: haishoku")"
+
+    local choice
+    choice=$(printf '%s\n' \
+        "$opt_reload" "$opt_random" "$opt_nitrogen" "$opt_dark" "$opt_light" "$opt_colorz" "$opt_haishoku" |
+        rofi -dmenu -i -p "Pywal" -theme "$DOTS_CONFIG/rofi/config.rasi" || true)
+    [[ -n "$choice" ]] || exit 0
+
+    local wall
+    wall="$(nitrogen_current_wallpaper)"
+    case "$choice" in
+        "$opt_reload")   run_wal "$wall" ;;
+        "$opt_random")   pick_random_wallpaper ;;
+        "$opt_nitrogen") exec "$REPO/scripts/dots-wallpaper" ;;
+        "$opt_dark")     LIGHT=0; run_wal "$wall" ;;
+        "$opt_light")    LIGHT=1; run_wal "$wall" ;;
+        "$opt_colorz")   BACKEND="colorz"; run_wal "$wall" ;;
+        "$opt_haishoku") BACKEND="haishoku"; run_wal "$wall" ;;
+    esac
+}
+
+case "$MODE" in
+    --restore)
+        if [[ -f "$WAL_CACHE/colors.Xresources" && -f "$WAL_CACHE/polybar-colors.ini" ]]; then
+            apply_live_desktop
+        else
+            run_wal "$(nitrogen_current_wallpaper)"
+        fi
+        ;;
+    --reload)
+        run_wal "$(nitrogen_current_wallpaper)"
+        ;;
+    --image)
+        run_wal "$IMAGE"
+        ;;
+    --random)
+        pick_random_wallpaper
+        ;;
+    --menu)
+        show_menu
+        ;;
+esac

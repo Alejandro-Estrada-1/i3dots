@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# Launches and controls the 3 floating bottom Polybar islands (left, center, right)
+# on every connected monitor, auto-detecting battery/network/bluetooth hardware
+# and adjusting i3 bottom gaps dynamically when hidden/shown.
+#
+# Usage: dots-polybar [start|restart|show|hide|toggle]
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+# shellcheck source=lib/common.sh
+source "$REPO/scripts/lib/common.sh"
+
+ACTION="${1:-restart}"
+BAR_CONFIG="$DOTS_CONFIG/polybar/config.ini"
+
+stop_bars() {
+    pkill -x polybar 2>/dev/null || true
+    local i=0
+    while pgrep -x polybar >/dev/null 2>&1 && (( i < 20 )); do
+        sleep 0.05
+        ((i++)) || true
+    done
+}
+
+set_bottom_gap() {
+    local px=$1
+    if command -v i3-msg >/dev/null && [[ -n "${DISPLAY:-}" ]]; then
+        i3-msg "gaps bottom all set $px" >/dev/null 2>&1 || true
+    fi
+}
+
+detect_hardware() {
+    POLYBAR_BATTERY=""
+    POLYBAR_ADAPTER=""
+    POLYBAR_WLAN=""
+    POLYBAR_ETH=""
+
+    local ps
+    for ps in /sys/class/power_supply/*; do
+        [[ -d "$ps" ]] || continue
+        local name type
+        name=$(basename "$ps")
+        type=$(cat "$ps/type" 2>/dev/null || true)
+        if [[ "$type" == "Battery" && -z "$POLYBAR_BATTERY" ]]; then
+            POLYBAR_BATTERY=$name
+        elif [[ "$type" == "Mains" && -z "$POLYBAR_ADAPTER" ]]; then
+            POLYBAR_ADAPTER=$name
+        fi
+    done
+
+    local iface
+    for iface in /sys/class/net/*; do
+        [[ -e "$iface" ]] || continue
+        local name
+        name=$(basename "$iface")
+        [[ "$name" == "lo" ]] && continue
+        if [[ -d "$iface/wireless" && -z "$POLYBAR_WLAN" ]]; then
+            POLYBAR_WLAN=$name
+        elif [[ ! -d "$iface/wireless" && -e "$iface/device" && -z "$POLYBAR_ETH" ]]; then
+            POLYBAR_ETH=$name
+        fi
+    done
+
+    # Build right-island module list dynamically so there are never orphan separators
+    local mods=(media sep pulseaudio sep date)
+    if [[ -n "$POLYBAR_BATTERY" ]]; then
+        mods+=(sep battery)
+    fi
+    if [[ -n "$POLYBAR_WLAN" ]]; then
+        mods+=(sep wlan)
+    elif [[ -n "$POLYBAR_ETH" ]]; then
+        mods+=(sep eth)
+    fi
+    if command -v bluetoothctl >/dev/null || [[ -d /sys/class/bluetooth ]]; then
+        mods+=(sep bluetooth)
+    fi
+
+    POLYBAR_RIGHT_MODULES="${mods[*]}"
+    export POLYBAR_BATTERY POLYBAR_ADAPTER POLYBAR_WLAN POLYBAR_ETH POLYBAR_RIGHT_MODULES
+}
+
+start_bars() {
+    ensure_wal_fallbacks
+    detect_hardware
+    stop_bars
+    set_bottom_gap 36
+
+    mapfile -t monitors < <(
+        if command -v xrandr >/dev/null; then
+            xrandr --query | awk '/ connected/{print $1}'
+        else
+            polybar --list-monitors 2>/dev/null | cut -d: -f1
+        fi
+    )
+
+    if (( ${#monitors[@]} == 0 )); then
+        monitors=("")
+    fi
+
+    local m
+    for m in "${monitors[@]}"; do
+        MONITOR="$m" polybar -q -c "$BAR_CONFIG" left   >/dev/null 2>&1 &
+        MONITOR="$m" polybar -q -c "$BAR_CONFIG" center >/dev/null 2>&1 &
+        MONITOR="$m" polybar -q -c "$BAR_CONFIG" right  >/dev/null 2>&1 &
+    done
+    disown -a 2>/dev/null || true
+}
+
+case "$ACTION" in
+    hide)
+        stop_bars
+        set_bottom_gap 6
+        ;;
+    show|start|restart)
+        start_bars
+        ;;
+    toggle)
+        if pgrep -x polybar >/dev/null 2>&1; then
+            stop_bars
+            set_bottom_gap 6
+        else
+            start_bars
+        fi
+        ;;
+    *)
+        echo "Usage: dots-polybar [start|restart|show|hide|toggle]" >&2
+        exit 1
+        ;;
+esac

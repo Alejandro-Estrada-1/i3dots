@@ -1,0 +1,8 @@
+# AUR packages (installed via paru or yay; install.sh bootstraps yay-bin if needed).
+# Note: install.sh skips brave-bin if brave is already installed and skips
+# python-pywal if `wal` is already provided (e.g. by python-pywal16).
+nitrogen
+python-pywal
+brave-bin
+i3lock-color
+tty-clock

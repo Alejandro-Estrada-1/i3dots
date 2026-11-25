@@ -1,0 +1,69 @@
+# Packages from the Arch Linux official repositories (core/extra).
+# One package per line; anything after # is ignored.
+
+# Window manager, bar, compositor & X11 core
+i3-wm
+polybar
+picom
+rofi
+dunst
+xss-lock
+xorg-xrandr
+xorg-xrdb
+xorg-xset
+xorg-setxkbmap
+xorg-xinput
+xclip
+xdotool
+polkit-gnome
+arandr
+
+# Media center (scripts/dots-media — GTK3 + Playerctl)
+gtk3
+python-gobject
+python-cairo
+python-pillow
+playerctl
+
+# Terminal, shell & utilities
+kitty
+zsh
+zoxide
+atuin
+fzf
+fastfetch
+cava
+flameshot
+jq
+git
+imagemagick
+
+# Network & Bluetooth
+network-manager-applet
+blueman
+bluez
+bluez-utils
+
+# Audio & brightness
+pipewire
+pipewire-pulse
+wireplumber
+alsa-utils
+pavucontrol
+brightnessctl
+
+# Fonts, icons & XDG defaults
+ttf-jetbrains-mono-nerd
+noto-fonts
+papirus-icon-theme
+lxappearance
+xdg-user-dirs
+xdg-utils
+
+# File manager & utilities used by keybinds
+thunar
+thunar-archive-plugin
+file-roller
+gvfs
+gvfs-mtp
+kcalc

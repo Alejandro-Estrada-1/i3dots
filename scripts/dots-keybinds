@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Interactive keybind cheatsheet for i3 (reads `# @bind` lines from config/i3/config).
+# Bound to Super + Shift + K.
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+# shellcheck source=lib/common.sh
+source "$REPO/scripts/lib/common.sh"
+
+ensure_wal_fallbacks
+
+if pgrep -x rofi >/dev/null; then
+    pkill -x rofi
+    exit 0
+fi
+
+cfg="$DOTS_CONFIG/i3/config"
+[[ -r "$cfg" ]] || cfg="$REPO/config/i3/config"
+
+translate_desc() {
+    local d=$1
+    if [[ "$DOTS_LANG" != es ]]; then
+        printf '%s' "$d"
+        return
+    fi
+    case "$d" in
+        "Change theme / Pywal menu")          printf '%s' "Cambiar tema / menú Pywal" ;;
+        "Change wallpaper (Nitrogen + Pywal)") printf '%s' "Cambiar fondo (Nitrogen + Pywal)" ;;
+        "Open terminal (Kitty)")              printf '%s' "Abrir terminal (Kitty)" ;;
+        "Open file manager (Thunar)")         printf '%s' "Abrir gestor de archivos (Thunar)" ;;
+        "Open application menu (Rofi)")       printf '%s' "Abrir menú de aplicaciones (Rofi)" ;;
+        "Open power menu")                    printf '%s' "Abrir menú de energía" ;;
+        "Open browser (Brave)")               printf '%s' "Abrir navegador (Brave)" ;;
+        "Media panel")                        printf '%s' "Panel multimedia" ;;
+        "Show notification history")          printf '%s' "Mostrar historial de notificaciones" ;;
+        "Close all notifications")            printf '%s' "Cerrar notificaciones" ;;
+        "Open calculator")                    printf '%s' "Abrir calculadora" ;;
+        "Take a screenshot")                  printf '%s' "Captura de pantalla" ;;
+        "Lock screen")                        printf '%s' "Bloquear pantalla" ;;
+        "Close the bar")                      printf '%s' "Ocultar la barra" ;;
+        "Open the bar")                       printf '%s' "Mostrar la barra" ;;
+        "Show keybinds cheatsheet")           printf '%s' "Mostrar atajos de teclado" ;;
+        "Refresh monitors and reload i3")     printf '%s' "Actualizar monitores y recargar i3" ;;
+        "Close active window")                printf '%s' "Cerrar ventana activa" ;;
+        "Exit i3")                            printf '%s' "Salir de i3" ;;
+        "Toggle fullscreen")                  printf '%s' "Pantalla completa" ;;
+        "Toggle floating window")             printf '%s' "Alternar ventana flotante" ;;
+        "Toggle split layout")                printf '%s' "Alternar división" ;;
+        "Focus left")                         printf '%s' "Foco a la izquierda" ;;
+        "Focus right")                        printf '%s' "Foco a la derecha" ;;
+        "Focus up")                           printf '%s' "Foco arriba" ;;
+        "Focus down")                         printf '%s' "Foco abajo" ;;
+        "Move window left")                   printf '%s' "Mover ventana a la izquierda" ;;
+        "Move window right")                  printf '%s' "Mover ventana a la derecha" ;;
+        "Move window up")                     printf '%s' "Mover ventana arriba" ;;
+        "Move window down")                   printf '%s' "Mover ventana abajo" ;;
+        "Go to workspace 1..5")               printf '%s' "Ir al escritorio 1..5 (laptop)" ;;
+        "Go to workspace 6..10")              printf '%s' "Ir al escritorio 6..10 (HDMI)" ;;
+        "Move window to workspace 1..5")      printf '%s' "Mover ventana al escritorio 1..5" ;;
+        "Move window to workspace 6..10")     printf '%s' "Mover ventana al escritorio 6..10" ;;
+        "Next workspace")                     printf '%s' "Escritorio siguiente" ;;
+        "Previous workspace")                 printf '%s' "Escritorio anterior" ;;
+        "Focus left monitor")                 printf '%s' "Foco al monitor izquierdo" ;;
+        "Focus right monitor")                printf '%s' "Foco al monitor derecho" ;;
+        "Move window to left monitor")        printf '%s' "Mover ventana al monitor izquierdo" ;;
+        "Move window to right monitor")       printf '%s' "Mover ventana al monitor derecho" ;;
+        "Volume up (+5%)")                    printf '%s' "Subir volumen (+5%)" ;;
+        "Volume down (-5%)")                  printf '%s' "Bajar volumen (-5%)" ;;
+        "Mute audio")                         printf '%s' "Silenciar audio" ;;
+        "Mute microphone")                    printf '%s' "Silenciar micrófono" ;;
+        "Brightness up (+2%)")                printf '%s' "Subir brillo (+2%)" ;;
+        "Brightness down (-2%)")              printf '%s' "Bajar brillo (-2%)" ;;
+        "Next track")                         printf '%s' "Siguiente canción" ;;
+        "Play / pause")                       printf '%s' "Pausar / reproducir" ;;
+        "Previous track")                     printf '%s' "Canción anterior" ;;
+        *)                                    printf '%s' "$d" ;;
+    esac
+}
+
+while IFS='|' read -r raw_desc raw_keys; do
+    desc=$(echo "$raw_desc" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    keys=$(echo "$raw_keys" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    printf '%-40s %s\n' "$(translate_desc "$desc")" "$keys"
+done < <(sed -n 's/^# @bind //p' "$cfg") |
+    rofi -dmenu -i -p "$(L "Keybinds" "Atajos")" -theme "$DOTS_CONFIG/rofi/keybinds.rasi" >/dev/null || true

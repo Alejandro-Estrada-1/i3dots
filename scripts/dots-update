@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Pulls the latest changes from GitHub and re-applies symlinks & Pywal colors.
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+git -C "$REPO" pull --ff-only
+DOTS_UPDATING=1 "$REPO/install.sh" --no-packages --yes
