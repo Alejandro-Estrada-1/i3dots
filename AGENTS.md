@@ -31,7 +31,7 @@ Diseño minimalista, limpio y atmosférico tipo *frosted glass* oscuro con palet
 - **Polybar (barra inferior flotante de 3 islas independientes por monitor):**
   - Posición: **abajo** (`bottom = true`), `offset-y = 6`, `height = 26`, `override-redirect = true`, `wm-restack = i3`.
   - Geometría exacta de las 3 islas:
-    - `bar/left`: `width = 24%`, `offset-x = 1%` — icono de cubo (``) + separador `|` + workspaces dinámicos de i3 (`󰄰 1 | 󰄰 2 | ... | 󰄯 4` con círculo hueco para inactivos, círculo sólido + subrayado inferior de `2px` en color claro para el activo, `pin-workspaces = true` para multi-monitor).
+    - `bar/left`: `width = 25%`, `offset-x = 1%` — icono de cubo (``) + separador `|` + workspaces dinámicos de i3 (`󰄰 1 | 󰄰 2 | ... | 󰄯 4` con círculo hueco para inactivos, círculo sólido + subrayado inferior de `2px` en color claro para el activo, `pin-workspaces = true` para multi-monitor) + visualizador de audio `cava` (`| ▁▂▃▄▅▆▇█`, `dots-cava` heredado de Waybar adaptado a Polybar) alineado a la derecha de la isla con el color acento de Pywal.
     - `bar/center`: `width = 25%`, `offset-x = 37.5%` — título de la ventana activa (`xwindow`) centrado; cuando no hay ventana enfocada se mantiene el marco translúcido vacío.
     - `bar/right`: `width = 25%`, `offset-x = 74%` — módulos centrados separados por `|`: botón de centro multimedia (`󰝚`), volumen (` 69%`), reloj (` 08:51`), batería (`󰄯 Full - 100%`), Wi-Fi (``), Bluetooth (``).
   - Estilo de las 3 islas: fondo oscuro translúcido Pywal (`#d9<background>`, con blur de `picom`), **borde fino de `1px`** (`border-size = 1`, color claro/muted de Pywal), esquinas ligeramente redondeadas (`radius = 3`), tipografía `JetBrainsMono Nerd Font`.

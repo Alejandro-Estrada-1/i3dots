@@ -11,7 +11,7 @@ Dotfiles minimalistas estilo *frosted glass* para **Arch Linux** con **i3 (X11)*
 | Componente | Herramienta |
 |---|---|
 | Gestor de ventanas | `i3-wm` (bordes rectos de 2px con Pywal, gaps 8px internos / 6px externos) |
-| Barra de estado | `polybar` (3 islas inferiores flotantes: escritorios, título activo y estado) |
+| Barra de estado | `polybar` (3 islas inferiores flotantes: escritorios + visualizador de audio `cava`, título activo y estado) |
 | Fondos de pantalla | `nitrogen` (restauración multi-monitor + selector GUI sincronizado con Pywal) |
 | Paleta dinámica | `pywal` (plantillas en vivo para Polybar, i3, Kitty, Rofi, Dunst, Cava, `dots-media`, `i3lock-color`) |
 | Compositor | `picom` (GLX + blur `dual_kawase`, esquinas rectas de `0px` en ventanas) |

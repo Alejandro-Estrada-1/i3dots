@@ -29,6 +29,7 @@ SCRIPTS=(
     dots-monitors
     dots-monitor-watch
     dots-polybar
+    dots-cava
     dots-pywal
     dots-wallpaper
     dots-media
