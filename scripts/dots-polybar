@@ -67,7 +67,7 @@ detect_hardware() {
         fi
     done
 
-    local mods=(media sep pulseaudio sep date)
+    local mods=(media sep pulseaudio sep memory sep filesystem sep date)
     if [[ -n "$POLYBAR_BATTERY" ]]; then
         mods+=(sep battery)
     fi

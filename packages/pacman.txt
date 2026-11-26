@@ -73,3 +73,4 @@ gvfs
 gvfs-mtp
 kcalc
 xorg-xprop
+htop
