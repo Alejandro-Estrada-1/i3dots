@@ -105,10 +105,10 @@ bindsym $mod+f fullscreen toggle
 bindsym $alt+f floating toggle
 # @bind Toggle split layout | Alt + S
 bindsym $alt+s layout toggle split
-# @bind Move window to scratchpad | Super + Shift + -
-bindsym $mod+Shift+minus move scratchpad
-# @bind Toggle scratchpad window | Super + -
-bindsym $mod+minus scratchpad show
+# @bind Move window to scratchpad | Super + Shift + Tab
+bindsym $mod+Shift+Tab move scratchpad
+# @bind Toggle scratchpad window | Super + Tab
+bindsym $mod+Tab scratchpad show
 # @bind Resize window mode (A/D/W/S) | Super + R
 bindsym $mod+r mode "resize"
 
@@ -224,18 +224,28 @@ include ~/.cache/i3dots/outputs.conf
 # ==============================================================================
 # KEYBINDS — Media, Volume & Brightness (50ms debounced via dots-mediakey)
 # ==============================================================================
-# @bind Volume up (+5%) | XF86AudioRaiseVolume
+# @bind Volume up (+5%) | XF86AudioRaiseVolume / Super + +
 bindsym XF86AudioRaiseVolume exec --no-startup-id $bin/dots-mediakey volume-up
-# @bind Volume down (-5%) | XF86AudioLowerVolume
+bindsym $mod+plus        exec --no-startup-id $bin/dots-mediakey volume-up
+bindsym $mod+equal       exec --no-startup-id $bin/dots-mediakey volume-up
+bindsym $mod+KP_Add      exec --no-startup-id $bin/dots-mediakey volume-up
+# @bind Volume down (-5%) | XF86AudioLowerVolume / Super + -
 bindsym XF86AudioLowerVolume exec --no-startup-id $bin/dots-mediakey volume-down
+bindsym $mod+minus       exec --no-startup-id $bin/dots-mediakey volume-down
+bindsym $mod+KP_Subtract exec --no-startup-id $bin/dots-mediakey volume-down
 # @bind Mute audio | XF86AudioMute
 bindsym XF86AudioMute exec --no-startup-id $bin/dots-mediakey mute
 # @bind Mute microphone | XF86AudioMicMute
 bindsym XF86AudioMicMute exec --no-startup-id $bin/dots-mediakey mic-mute
-# @bind Brightness up (+2%) | XF86MonBrightnessUp
+# @bind Brightness up (+2%) | XF86MonBrightnessUp / Alt + +
 bindsym XF86MonBrightnessUp exec --no-startup-id $bin/dots-mediakey brightness-up
-# @bind Brightness down (-2%) | XF86MonBrightnessDown
+bindsym $alt+plus        exec --no-startup-id $bin/dots-mediakey brightness-up
+bindsym $alt+equal       exec --no-startup-id $bin/dots-mediakey brightness-up
+bindsym $alt+KP_Add      exec --no-startup-id $bin/dots-mediakey brightness-up
+# @bind Brightness down (-2%) | XF86MonBrightnessDown / Alt + -
 bindsym XF86MonBrightnessDown exec --no-startup-id $bin/dots-mediakey brightness-down
+bindsym $alt+minus       exec --no-startup-id $bin/dots-mediakey brightness-down
+bindsym $alt+KP_Subtract exec --no-startup-id $bin/dots-mediakey brightness-down
 
 # @bind Next track | XF86AudioNext
 bindsym XF86AudioNext exec --no-startup-id playerctl next
@@ -260,7 +270,8 @@ for_window [class="kcalc"] floating enable, move position center
 for_window [class="Arandr"] floating enable, move position center
 for_window [class="Lxappearance"] floating enable, move position center
 for_window [window_role="pop-up|bubble|task_dialog|Preferences|dialog"] floating enable
-for_window [window_type="dialog|menu"] floating enable
+for_window [window_type="dialog"] floating enable
+for_window [window_type="menu"] floating enable
 
 # ==============================================================================
 # AUTOSTART

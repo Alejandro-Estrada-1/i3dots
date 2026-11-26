@@ -10,14 +10,33 @@ REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 # shellcheck source=lib/common.sh
 source "$REPO/scripts/lib/common.sh"
 
+# Hardware backlight (laptops) via brightnessctl; desktops / external monitors
+# without one fall back to software brightness with `xrandr --brightness`.
+has_backlight() { compgen -G "/sys/class/backlight/*" >/dev/null && command -v brightnessctl >/dev/null; }
+SOFT_BRIGHT_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/i3dots/brightness"
+
+soft_brightness() { # delta (e.g. +5 / -5) -> applies to every connected output
+    local delta=$1 cur out
+    mkdir -p "$(dirname "$SOFT_BRIGHT_FILE")"
+    cur=$(cat "$SOFT_BRIGHT_FILE" 2>/dev/null || echo 100)
+    [[ "$cur" =~ ^[0-9]+$ ]] || cur=100
+    cur=$(( cur + delta ))
+    (( cur > 100 )) && cur=100
+    (( cur < 20 ))  && cur=20
+    echo "$cur" >"$SOFT_BRIGHT_FILE"
+    while read -r out; do
+        xrandr --output "$out" --brightness "$(awk -v p="$cur" 'BEGIN{printf "%.2f", p/100}')" 2>/dev/null || true
+    done < <(xrandr --query | awk '/ connected/{print $1}')
+}
+
 action=${1:-}
 case "$action" in
     volume-up)       cmd=(wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+) ;;
     volume-down)     cmd=(wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-) ;;
     mute)            cmd=(wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle) ;;
     mic-mute)        cmd=(wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle) ;;
-    brightness-up)   cmd=(brightnessctl -q s 2%+) ;;
-    brightness-down) cmd=(brightnessctl -q s 2%-) ;;
+    brightness-up)   if has_backlight; then cmd=(brightnessctl -q s 2%+); else cmd=(soft_brightness +5); fi ;;
+    brightness-down) if has_backlight; then cmd=(brightnessctl -q s 2%-); else cmd=(soft_brightness -5); fi ;;
     *) sed -n '6p' "$0" | sed 's/^# //' >&2; exit 1 ;;
 esac
 
@@ -71,9 +90,13 @@ case "$action" in
         fi
         ;;
     brightness-up|brightness-down)
-        cur=$(brightnessctl g 2>/dev/null || echo 0)
-        max=$(brightnessctl m 2>/dev/null || echo 1)
-        pct=$(( max > 0 ? (cur * 100 + max / 2) / max : 0 ))
+        if has_backlight; then
+            cur=$(brightnessctl g 2>/dev/null || echo 0)
+            max=$(brightnessctl m 2>/dev/null || echo 1)
+            pct=$(( max > 0 ? (cur * 100 + max / 2) / max : 0 ))
+        else
+            pct=$(cat "$SOFT_BRIGHT_FILE" 2>/dev/null || echo 100)
+        fi
         notify_osd "osd-brightness" 9104 "  $(L "Brightness" "Brillo")" "$pct%" "$pct"
         ;;
 esac

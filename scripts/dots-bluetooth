@@ -7,12 +7,16 @@ REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 # shellcheck source=lib/common.sh
 source "$REPO/scripts/lib/common.sh"
 
+# bluetoothctl blocks forever when there is no controller/daemon: always time-box it
+bt() { timeout 2 bluetoothctl "$@" 2>/dev/null; }
+has_controller() { compgen -G "/sys/class/bluetooth/hci*" >/dev/null && command -v bluetoothctl >/dev/null; }
+
 if [[ "${1:-}" == "toggle" ]]; then
-    if command -v bluetoothctl >/dev/null; then
-        if bluetoothctl show 2>/dev/null | grep -q "Powered: yes"; then
-            bluetoothctl power off >/dev/null 2>&1 || true
+    if has_controller; then
+        if bt show | grep -q "Powered: yes"; then
+            bt power off >/dev/null || true
         else
-            bluetoothctl power on >/dev/null 2>&1 || true
+            bt power on >/dev/null || true
         fi
     fi
     exit 0
@@ -27,7 +31,7 @@ if [[ -r "$WAL_CACHE/polybar-colors.ini" ]]; then
     [[ -n "$m" ]] && muted="$m"
 fi
 
-if command -v bluetoothctl >/dev/null && bluetoothctl show 2>/dev/null | grep -q "Powered: yes"; then
+if has_controller && bt show | grep -q "Powered: yes"; then
     printf '%%{T2}%%{F%s}%%{F-}%%{T-}\n' "$accent"
 else
     printf '%%{T2}%%{F%s}󰂲%%{F-}%%{T-}\n' "$muted"

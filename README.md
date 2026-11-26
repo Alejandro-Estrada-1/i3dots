@@ -80,7 +80,7 @@ Any existing config in `~/.config` is automatically backed up to `~/.config/i3do
 | `Alt + F` | Toggle floating |
 | `Alt + S` | Toggle split layout |
 | `Super + R` | Keyboard resize mode (`A/D/W/S` or arrows, `Shift` for larger steps) |
-| `Super + Shift + -` / `Super + -` | Move window to scratchpad / toggle scratchpad |
+| `Super + Shift + Tab` / `Super + Tab` | Move window to scratchpad / toggle scratchpad |
 | `Super + A / D / W / S` | Focus left / right / up / down |
 | `Super + Shift + A / D / W / S` | Move window left / right / up / down |
 | `Super + Left / Right click` | Drag / resize floating window |
@@ -94,7 +94,7 @@ Any existing config in `~/.config` is automatically backed up to `~/.config/i3do
 
 ### Hardware & Media Keys
 
-Volume (`±5%`, max `150%`) and brightness (`±2%`) are handled through `dots-mediakey` with a 50 ms `flock` debounce and Pywal-styled Dunst OSD progress bars. Playback keys (`XF86AudioPlay/Pause/Next/Prev`) control MPRIS players via `playerctl`.
+Volume (`±5%`, max `150%`) and brightness (`±2%`) are handled through `dots-mediakey`. Keyboards without media keys can use **`Super + +` / `Super + -`** for volume and **`Alt + +` / `Alt + -`** for brightness (numpad `+`/`-` work too). On machines without a hardware backlight (desktops / external monitors), brightness falls back to software dimming with `xrandr --brightness` (`±5%`, 20–100%). Everything goes through `dots-mediakey` with a 50 ms `flock` debounce and Pywal-styled Dunst OSD progress bars. Playback keys (`XF86AudioPlay/Pause/Next/Prev`) control MPRIS players via `playerctl`.
 
 ---
 

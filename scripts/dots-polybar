@@ -76,7 +76,8 @@ detect_hardware() {
     elif [[ -n "$POLYBAR_ETH" ]]; then
         mods+=(sep eth)
     fi
-    if command -v bluetoothctl >/dev/null || [[ -d /sys/class/bluetooth ]]; then
+    # Only show Bluetooth when a controller actually exists (bluetoothctl blocks otherwise)
+    if command -v bluetoothctl >/dev/null && compgen -G "/sys/class/bluetooth/hci*" >/dev/null; then
         mods+=(sep bluetooth)
     fi
 
@@ -104,9 +105,9 @@ start_bars() {
 
     local m
     for m in "${monitors[@]}"; do
-        MONITOR="$m" polybar -q -c "$BAR_CONFIG" left   </dev/null >/dev/null 2>&1 &
-        MONITOR="$m" polybar -q -c "$BAR_CONFIG" center </dev/null >/dev/null 2>&1 &
-        MONITOR="$m" polybar -q -c "$BAR_CONFIG" right  </dev/null >/dev/null 2>&1 &
+        MONITOR="$m" polybar -q -c "$BAR_CONFIG" left   </dev/null >/dev/null 2>&1 9>&- &
+        MONITOR="$m" polybar -q -c "$BAR_CONFIG" center </dev/null >/dev/null 2>&1 9>&- &
+        MONITOR="$m" polybar -q -c "$BAR_CONFIG" right  </dev/null >/dev/null 2>&1 9>&- &
     done
     disown -a 2>/dev/null || true
 }

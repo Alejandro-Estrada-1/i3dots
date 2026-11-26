@@ -35,6 +35,8 @@ Diseño minimalista, limpio y atmosférico tipo *frosted glass* oscuro con palet
     - `bar/center`: `width = 25%`, `offset-x = 37.5%` — título de la ventana activa (`xwindow`) centrado; cuando no hay ventana enfocada se mantiene el marco translúcido vacío.
     - `bar/right`: `width = 25%`, `offset-x = 74%` — módulos centrados separados por `|`: botón de centro multimedia (`󰝚`), volumen (` 69%`), reloj (` 08:51`), batería (`󰄯 Full - 100%`), Wi-Fi (``), Bluetooth (``).
   - Estilo de las 3 islas: fondo oscuro translúcido Pywal (`#d9<background>`, con blur de `picom`), **borde fino de `1px`** (`border-size = 1`, color claro/muted de Pywal), esquinas ligeramente redondeadas (`radius = 3`), tipografía `JetBrainsMono Nerd Font`.
+  - **Regla técnica Polybar:** Polybar solo expande `${colors.x}` cuando es el valor completo; **nunca** incrustarlo en etiquetas inline (`%{F${colors.x}}` imprime `}}` literal). Colorear con `format-*-foreground` / `label-*-foreground` y usar `%{F-}` para volver al color base. Módulos dependientes de hardware (batería, Wi-Fi, Bluetooth) solo se cargan si el dispositivo existe, y toda llamada a `bluetoothctl` va con `timeout`.
+  - **Regla técnica Kitty:** `globinclude` no acepta rutas absolutas ni `~`; los colores de Pywal se cargan con `include ${HOME}/.cache/wal/kitty-colors.conf`.
 - **i3 (ventanas, bordes y gaps):**
   - Bordes finos y limpios: `default_border pixel 2`, `default_floating_border pixel 2`.
   - **Sin esquinas redondeadas en ventanas** (`corner-radius = 0` en picom), manteniendo marcos rectos y nítidos como en las capturas.
@@ -59,7 +61,7 @@ Diseño minimalista, limpio y atmosférico tipo *frosted glass* oscuro con palet
   - Tap-to-click y *disable-while-typing* para touchpad en `dots-input` (`libinput` vía `xinput`).
   - Soporte para `startx` (`home/.xinitrc` + `xorg-server`/`xorg-xinit` en `packages/pacman.txt`).
   - Notificaciones OSD de volumen y brillo vía `dunstify` con barra de progreso en `dots-mediakey`.
-  - Modo de redimensionado por teclado (`Super + R`), *scratchpad* (`Super + -` / `Super + Shift + -`), hotplug automático HDMI sin dependencias extra (`dots-monitor-watch` vía `udevadm`) e historial del portapapeles con Rofi (`Super + V` → `dots-clipboard` con `greenclip`).
+  - Modo de redimensionado por teclado (`Super + R`), *scratchpad* (`Super + Tab` / `Super + Shift + Tab`), hotplug automático HDMI sin dependencias extra (`dots-monitor-watch` vía `udevadm`) e historial del portapapeles con Rofi (`Super + V` → `dots-clipboard` con `greenclip`).
 
 ---
 
@@ -126,9 +128,10 @@ Todos los atajos deben mantenerse equivalentes en i3 (`Mod4` = `SUPER`, `Mod1` =
 - Mantener `dots-mediakey` con `flock` (ventana de 50 ms) para evitar eventos duplicados en laptops (WMI):
   - `XF86AudioRaiseVolume`: +5% (máx 150%, `wpctl`)
   - `XF86AudioLowerVolume`: -5% (`wpctl`)
+  - Alternativas para teclados sin teclas multimedia: `SUPER + +` / `SUPER + -` (volumen ±5%) y `ALT + +` / `ALT + -` (brillo), incluyendo `equal` y `KP_Add`/`KP_Subtract`.
   - `XF86AudioMute`: toggle mute audio (`wpctl`)
   - `XF86AudioMicMute`: toggle mute micrófono (`wpctl`)
-  - `XF86MonBrightnessUp` / `XF86MonBrightnessDown`: +/- 2% (`brightnessctl`)
+  - `XF86MonBrightnessUp` / `XF86MonBrightnessDown`: +/- 2% (`brightnessctl`); sin backlight por hardware (PC de escritorio) se usa brillo por software `xrandr --brightness` (±5%, 20–100%).
   - `XF86AudioNext`, `XF86AudioPause`, `XF86AudioPlay`, `XF86AudioPrev`: `playerctl`
 
 ---

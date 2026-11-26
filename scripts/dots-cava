@@ -8,7 +8,11 @@ set -euo pipefail
 
 bars="▁▂▃▄▅▆▇█"
 config="${XDG_RUNTIME_DIR:-/tmp}/dots-cava-$$.conf"
-trap 'rm -f "$config"; pkill -P $$ 2>/dev/null || true' EXIT TERM INT
+cleanup() { rm -f "$config"; pkill -P $$ 2>/dev/null || true; }
+trap cleanup EXIT
+# A signal trap replaces the default action: exit explicitly, otherwise the loop
+# keeps running after SIGTERM and Polybar hangs waiting for this script to die.
+trap 'exit 0' TERM INT HUP
 
 cat >"$config" <<EOF
 [general]

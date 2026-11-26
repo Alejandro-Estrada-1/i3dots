@@ -80,7 +80,7 @@ Cualquier archivo previo en `~/.config` se respalda automáticamente en `~/.conf
 | `Alt + F` | Alternar ventana flotante |
 | `Alt + S` | Alternar división |
 | `Super + R` | Modo redimensionar con teclado (`A/D/W/S` o flechas, `Shift` para saltos grandes) |
-| `Super + Shift + -` / `Super + -` | Enviar ventana al scratchpad / mostrar u ocultar scratchpad |
+| `Super + Shift + Tab` / `Super + Tab` | Enviar ventana al scratchpad / mostrar u ocultar scratchpad |
 | `Super + A / D / W / S` | Foco izquierda / derecha / arriba / abajo |
 | `Super + Shift + A / D / W / S` | Mover ventana izquierda / derecha / arriba / abajo |
 | `Super + Clic izq. / der.` | Mover / redimensionar ventana flotante |
@@ -94,7 +94,7 @@ Cualquier archivo previo en `~/.config` se respalda automáticamente en `~/.conf
 
 ### Teclas multimedia y brillo
 
-El volumen (`±5%`, máx. `150%`) y brillo (`±2%`) pasan por `dots-mediakey` con *debounce* de 50 ms mediante `flock` y notificaciones OSD minimalistas con barra de progreso en Dunst. Las teclas de reproducción controlan reproductores MPRIS con `playerctl`.
+Si tu teclado no tiene teclas multimedia usa **`Super + +` / `Super + -`** para el volumen y **`Alt + +` / `Alt + -`** para el brillo (también funcionan `+`/`-` del teclado numérico). En equipos sin retroiluminación por hardware (PC de escritorio / monitores externos) el brillo usa atenuación por software con `xrandr --brightness` (`±5%`, 20–100%). El volumen (`±5%`, máx. `150%`) y brillo (`±2%`) pasan por `dots-mediakey` con *debounce* de 50 ms mediante `flock` y notificaciones OSD minimalistas con barra de progreso en Dunst. Las teclas de reproducción controlan reproductores MPRIS con `playerctl`.
 
 ---
 
