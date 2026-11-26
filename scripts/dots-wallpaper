@@ -2,7 +2,8 @@
 # Wallpaper manager combining Nitrogen and Pywal (bound to Alt + W).
 #
 # Usage:
-#   dots-wallpaper                 open Nitrogen GUI, then auto-sync Pywal on exit
+#   dots-wallpaper                 open Nitrogen GUI (repo wallpapers + ~/Imágenes),
+#                                  then auto-sync Pywal on exit
 #   dots-wallpaper <image_path>    set wallpaper via Nitrogen and update Pywal
 #   dots-wallpaper --random        pick a random wallpaper and update Pywal
 set -euo pipefail
@@ -19,8 +20,9 @@ case "${1:-}" in
         before="$(nitrogen_current_wallpaper)"
         before_mtime=$(stat -c %Y "$DOTS_CONFIG/nitrogen/bg-saved.cfg" 2>/dev/null || echo 0)
 
-        # Open Nitrogen so the user can visually choose a wallpaper
-        nitrogen "$REPO/wallpapers" >/dev/null 2>&1 || nitrogen >/dev/null 2>&1 || true
+        # Open Nitrogen (browsing every folder from nitrogen.cfg) to pick a wallpaper
+        sync_nitrogen_dirs
+        nitrogen >/dev/null 2>&1 || true
 
         after="$(nitrogen_current_wallpaper)"
         after_mtime=$(stat -c %Y "$DOTS_CONFIG/nitrogen/bg-saved.cfg" 2>/dev/null || echo 0)

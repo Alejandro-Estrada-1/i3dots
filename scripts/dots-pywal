@@ -93,11 +93,10 @@ run_wal() {
 }
 
 pick_random_wallpaper() {
-    local dirs=("$REPO/wallpapers")
-    [[ -d "$HOME/Pictures/Wallpapers" ]] && dirs+=("$HOME/Pictures/Wallpapers")
-    [[ -d "$HOME/Imágenes/Wallpapers" ]] && dirs+=("$HOME/Imágenes/Wallpapers")
+    local dirs
+    mapfile -t dirs < <(wallpaper_dirs)
 
-    mapfile -t imgs < <(find "${dirs[@]}" -maxdepth 2 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) 2>/dev/null)
+    mapfile -t imgs < <(find "${dirs[@]}" -maxdepth 3 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) 2>/dev/null)
     (( ${#imgs[@]} > 0 )) || { echo "No wallpapers found" >&2; exit 1; }
 
     local chosen="${imgs[RANDOM % ${#imgs[@]}]}"

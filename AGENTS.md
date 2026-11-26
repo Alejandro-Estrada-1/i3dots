@@ -55,6 +55,7 @@ Diseño minimalista, limpio y atmosférico tipo *frosted glass* oscuro con palet
 - **Integración `nitrogen` + `pywal`:**
   - `nitrogen` gestiona el fondo en todos los monitores; `pywal` se ejecuta con `-n` (sin pisar a Nitrogen) y regenera todas las plantillas + Xresources + recarga en vivo de i3, Polybar, Kitty, Dunst y Cava.
   - Wallpapers incluidos en `wallpapers/`: `mountain-lake.jpg` (por defecto, lago alpino), `misty-pines.jpg`, `arctic-dusk.jpg` y `amber-dusk.jpg`.
+  - Carpetas de fondos (`wallpaper_dirs` en `scripts/lib/common.sh`): `wallpapers/` del repo + carpeta de Imágenes de XDG (`xdg-user-dir PICTURES`, p. ej. `~/Imágenes`, con subcarpetas). `dots-wallpaper` sincroniza `dirs=` de `nitrogen.cfg` antes de abrir Nitrogen y `--random` busca en las mismas carpetas.
 - **Ergonomía y acabados adicionales de X11 / i3:**
   - Arranque secuencial en i3 (`dots-monitors --init && dots-pywal --restore`) + `flock` en `dots-polybar` para evitar *race conditions* o barras duplicadas.
   - Tema GTK oscuro coherente (`config/gtk-3.0/settings.ini`, `config/gtk-4.0/settings.ini` con `Adwaita-dark` + `Papirus-Dark` + `gsettings`).

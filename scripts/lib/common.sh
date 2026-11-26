@@ -35,6 +35,40 @@ ensure_wal_fallbacks() {
     fi
 }
 
+# Prints every wallpaper folder (one per line): the repo's wallpapers/ plus the
+# user's XDG Pictures folder (~/Imágenes, ~/Pictures...). Subfolders such as
+# Pictures/Wallpapers are covered because Nitrogen and --random recurse.
+wallpaper_dirs() {
+    local pics="" d
+    command -v xdg-user-dir >/dev/null && pics="$(xdg-user-dir PICTURES 2>/dev/null || true)"
+    [[ "$pics" == "$HOME" ]] && pics=""
+    {
+        printf '%s\n' "$REPO/wallpapers"
+        for d in "$pics" "$HOME/Imágenes" "$HOME/Pictures"; do
+            [[ -n "$d" && -d "$d" ]] && readlink -f "$d"
+        done
+    } | awk '!seen[$0]++'
+}
+
+# Makes sure Nitrogen's browser lists every wallpaper_dirs folder, keeping any
+# folder the user added manually from the Nitrogen preferences.
+sync_nitrogen_dirs() {
+    local cfg="$DOTS_CONFIG/nitrogen/nitrogen.cfg" current merged d
+    [[ -f "$cfg" ]] || return 0
+    current=$(sed -n 's/^dirs=//p' "$cfg" | head -n 1)
+    merged="$current"
+    while IFS= read -r d; do
+        [[ ";$merged" == *";$d;"* ]] || merged+="$d;"
+    done < <(wallpaper_dirs)
+    [[ "$merged" == "$current" ]] && return 0
+    if grep -q '^dirs=' "$cfg"; then
+        local tmp; tmp=$(mktemp)
+        awk -v v="$merged" '/^dirs=/{print "dirs=" v; next} {print}' "$cfg" >"$tmp" && mv "$tmp" "$cfg"
+    else
+        printf 'dirs=%s\n' "$merged" >>"$cfg"
+    fi
+}
+
 # Returns the active wallpaper saved by Nitrogen, or the default repo wallpaper.
 nitrogen_current_wallpaper() {
     local cfg="$DOTS_CONFIG/nitrogen/bg-saved.cfg"

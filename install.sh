@@ -428,10 +428,8 @@ if (( DRY_RUN )); then
     echo "    [dry-run] configure Nitrogen with $(short "$INITIAL_WALL")"
     echo "    [dry-run] dots-pywal --image $(short "$INITIAL_WALL")"
 else
-    # Point Nitrogen browser at repo wallpapers (plus user Pictures/Wallpapers if present)
-    wall_dirs="$REPO/wallpapers;"
-    [[ -d "$HOME/Pictures/Wallpapers" ]] && wall_dirs+="$HOME/Pictures/Wallpapers;"
-    [[ -d "$HOME/Imágenes/Wallpapers" ]] && wall_dirs+="$HOME/Imágenes/Wallpapers;"
+    # Point Nitrogen browser at repo wallpapers plus the user's Pictures folder
+    wall_dirs="$(wallpaper_dirs | tr '\n' ';')"
     if [[ ! -f "$CFG/nitrogen/nitrogen.cfg" ]]; then
         cat >"$CFG/nitrogen/nitrogen.cfg" <<EOF
 [geometry]
@@ -448,6 +446,7 @@ icon_caps=false
 dirs=$wall_dirs
 EOF
     fi
+    sync_nitrogen_dirs
 
     if [[ ! -f "$CFG/nitrogen/bg-saved.cfg" || -n "$WALLPAPER_ARG" ]]; then
         cat >"$CFG/nitrogen/bg-saved.cfg" <<EOF
