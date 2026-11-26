@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Launches and controls the 3 floating bottom Polybar islands (left, center, right)
-# on every connected monitor, auto-detecting battery/network/bluetooth hardware
-# and adjusting i3 bottom gaps dynamically when hidden/shown.
+# on every connected monitor, auto-detecting battery/network/bluetooth hardware,
+# serializing restarts with flock to avoid race conditions, and adjusting i3
+# bottom gaps dynamically when hidden/shown.
 #
 # Usage: dots-polybar [start|restart|show|hide|toggle]
 set -euo pipefail
@@ -13,10 +14,14 @@ source "$REPO/scripts/lib/common.sh"
 ACTION="${1:-restart}"
 BAR_CONFIG="$DOTS_CONFIG/polybar/config.ini"
 
+# Prevent concurrent calls (e.g. startup + hotplug) from racing or spawning duplicates
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/dots-polybar.lock"
+flock 9
+
 stop_bars() {
     pkill -x polybar 2>/dev/null || true
     local i=0
-    while pgrep -x polybar >/dev/null 2>&1 && (( i < 20 )); do
+    while pgrep -x polybar >/dev/null 2>&1 && (( i < 25 )); do
         sleep 0.05
         ((i++)) || true
     done
@@ -61,7 +66,6 @@ detect_hardware() {
         fi
     done
 
-    # Build right-island module list dynamically so there are never orphan separators
     local mods=(media sep pulseaudio sep date)
     if [[ -n "$POLYBAR_BATTERY" ]]; then
         mods+=(sep battery)
@@ -99,9 +103,9 @@ start_bars() {
 
     local m
     for m in "${monitors[@]}"; do
-        MONITOR="$m" polybar -q -c "$BAR_CONFIG" left   >/dev/null 2>&1 &
-        MONITOR="$m" polybar -q -c "$BAR_CONFIG" center >/dev/null 2>&1 &
-        MONITOR="$m" polybar -q -c "$BAR_CONFIG" right  >/dev/null 2>&1 &
+        MONITOR="$m" polybar -q -c "$BAR_CONFIG" left   </dev/null >/dev/null 2>&1 &
+        MONITOR="$m" polybar -q -c "$BAR_CONFIG" center </dev/null >/dev/null 2>&1 &
+        MONITOR="$m" polybar -q -c "$BAR_CONFIG" right  </dev/null >/dev/null 2>&1 &
     done
     disown -a 2>/dev/null || true
 }

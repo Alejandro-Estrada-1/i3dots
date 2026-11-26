@@ -2,11 +2,14 @@
 # One package per line; anything after # is ignored.
 
 # Window manager, bar, compositor & X11 core
+xorg-server
+xorg-xinit
 i3-wm
 polybar
 picom
 rofi
 dunst
+libnotify
 xss-lock
 xorg-xrandr
 xorg-xrdb
@@ -52,10 +55,12 @@ alsa-utils
 pavucontrol
 brightnessctl
 
-# Fonts, icons & XDG defaults
+# Fonts, icons, dark GTK theme & XDG defaults
 ttf-jetbrains-mono-nerd
 noto-fonts
 papirus-icon-theme
+gnome-themes-extra
+xdg-desktop-portal-gtk
 lxappearance
 xdg-user-dirs
 xdg-utils

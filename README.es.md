@@ -54,6 +54,7 @@ Cualquier archivo previo en `~/.config` se respalda automáticamente en `~/.conf
 | Atajo | Acción |
 |---|---|
 | `Super + B` | Abrir navegador **Brave** |
+| `Super + V` | Historial del portapapeles en **Rofi** (`dots-clipboard` / `greenclip`) |
 | `Alt + Enter` | Abrir terminal **Kitty** |
 | `Super + E` | Abrir gestor de archivos (**Thunar**) |
 | `Alt + X` | Abrir menú de aplicaciones (**Rofi**) |
@@ -78,6 +79,8 @@ Cualquier archivo previo en `~/.config` se respalda automáticamente en `~/.conf
 | `Super + F` | Pantalla completa |
 | `Alt + F` | Alternar ventana flotante |
 | `Alt + S` | Alternar división |
+| `Super + R` | Modo redimensionar con teclado (`A/D/W/S` o flechas, `Shift` para saltos grandes) |
+| `Super + Shift + -` / `Super + -` | Enviar ventana al scratchpad / mostrar u ocultar scratchpad |
 | `Super + A / D / W / S` | Foco izquierda / derecha / arriba / abajo |
 | `Super + Shift + A / D / W / S` | Mover ventana izquierda / derecha / arriba / abajo |
 | `Super + Clic izq. / der.` | Mover / redimensionar ventana flotante |
@@ -91,19 +94,19 @@ Cualquier archivo previo en `~/.config` se respalda automáticamente en `~/.conf
 
 ### Teclas multimedia y brillo
 
-El volumen (`±5%`, máx. `150%`) y brillo (`±2%`) pasan por `dots-mediakey` con *debounce* de 50 ms mediante `flock` para evitar eventos duplicados en laptops. Las teclas de reproducción controlan reproductores MPRIS con `playerctl`.
+El volumen (`±5%`, máx. `150%`) y brillo (`±2%`) pasan por `dots-mediakey` con *debounce* de 50 ms mediante `flock` y notificaciones OSD minimalistas con barra de progreso en Dunst. Las teclas de reproducción controlan reproductores MPRIS con `playerctl`.
 
 ---
 
 ## Multi-monitor (Laptop + HDMI externo)
 
-`dots-monitors` detecta automáticamente las salidas X11 con `xrandr`:
+`dots-monitors` detecta automáticamente las salidas X11 con `xrandr` (y `dots-monitor-watch` escucha eventos DRM del kernel con `udevadm` para hotplug automático al conectar/desconectar HDMI):
 - Coloca la pantalla de laptop (`eDP-*` / `LVDS-*`) a la izquierda (`0x0`) con su tasa de refresco más alta.
 - Coloca el monitor externo `HDMI-*` a la derecha con su resolución preferida.
 - Asigna los escritorios `1–5` a la laptop y `6–10` al monitor HDMI (con *fallback* automático a la laptop al desconectarlo).
 - Restaura el fondo con Nitrogen en todas las pantallas y reinicia las 3 islas de Polybar en cada monitor.
 
-Ejecuta `dots-monitors --reload` (o pulsa `Super + Shift + R`) tras conectar o desconectar el cable HDMI.
+También puedes forzar la actualización manualmente en cualquier momento con `Super + Shift + R` (`dots-monitors --reload`).
 
 ---
 

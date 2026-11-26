@@ -23,10 +23,11 @@ CFG="$DOTS_CONFIG"
 BIN="$HOME/.local/bin"
 BACKUP="$CFG/i3dots-backup-$(date +%Y%m%d-%H%M%S)"
 
-CONFIGS=(i3 polybar picom rofi dunst kitty fastfetch atuin dots-media wal)
-HOME_FILES=(.zshrc .zprofile .p10k.zsh)
+CONFIGS=(i3 polybar picom rofi dunst kitty fastfetch atuin dots-media wal gtk-3.0 gtk-4.0)
+HOME_FILES=(.zshrc .zprofile .p10k.zsh .xinitrc)
 SCRIPTS=(
     dots-monitors
+    dots-monitor-watch
     dots-polybar
     dots-pywal
     dots-wallpaper
@@ -37,6 +38,7 @@ SCRIPTS=(
     dots-keybinds
     dots-input
     dots-bluetooth
+    dots-clipboard
     dots-update
 )
 
@@ -223,7 +225,7 @@ if (( PACKAGES )); then
                      "pacman no pudo instalar los paquetes. Ejecuta ./install.sh de nuevo para continuar.")"
     fi
 
-    step "$(L "Installing AUR packages (Nitrogen, Pywal, Brave, i3lock-color, tty-clock)" "Instalando paquetes del AUR (Nitrogen, Pywal, Brave, i3lock-color, tty-clock)")"
+    step "$(L "Installing AUR packages (Nitrogen, Pywal, Brave, i3lock-color, tty-clock, greenclip)" "Instalando paquetes del AUR (Nitrogen, Pywal, Brave, i3lock-color, tty-clock, greenclip)")"
     mapfile -t aur_raw < <(read_list "$REPO/packages/aur.txt")
     aur_filtered=()
     for pkg in "${aur_raw[@]}"; do
@@ -235,6 +237,11 @@ if (( PACKAGES )); then
         # Skip python-pywal if `wal` is already provided (e.g. python-pywal16)
         if [[ "$pkg" == "python-pywal" ]] && command -v wal >/dev/null 2>&1; then
             echo "    $(L "already installed" "ya instalado"): pywal ($(command -v wal))"
+            continue
+        fi
+        # Skip rofi-greenclip if `greenclip` is already installed
+        if [[ "$pkg" == "rofi-greenclip" ]] && command -v greenclip >/dev/null 2>&1; then
+            echo "    $(L "already installed" "ya instalado"): greenclip"
             continue
         fi
         aur_filtered+=("$pkg")
@@ -388,6 +395,14 @@ if command -v xdg-settings >/dev/null; then
             break
         fi
     done
+fi
+
+# Ensure GTK / portal / Electron apps honor dark mode consistently
+if command -v gsettings >/dev/null; then
+    run gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+    run gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
+    run gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' 2>/dev/null || true
+    echo "    $(L "GTK dark mode" "modo oscuro GTK"): Adwaita-dark + Papirus-Dark"
 fi
 
 if systemctl list-unit-files bluetooth.service >/dev/null 2>&1 &&

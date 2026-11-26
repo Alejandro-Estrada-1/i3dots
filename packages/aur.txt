@@ -6,3 +6,4 @@ python-pywal
 brave-bin
 i3lock-color
 tty-clock
+rofi-greenclip

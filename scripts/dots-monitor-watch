@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Zero-dependency HDMI / external monitor hotplug watcher for X11 / i3.
+# Listens to kernel DRM uevents via `udevadm monitor` (0% CPU while idle) and
+# automatically runs `dots-monitors --reload` whenever displays are plugged or
+# unplugged. Protected by flock so only one instance runs per session.
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+# shellcheck source=lib/common.sh
+source "$REPO/scripts/lib/common.sh"
+
+command -v udevadm >/dev/null || exit 0
+command -v xrandr >/dev/null || exit 0
+[[ -n "${DISPLAY:-}" ]] || exit 0
+
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/dots-monitor-watch.lock"
+flock -n 9 || exit 0
+
+connected_signature() {
+    xrandr --query 2>/dev/null | awk '/ connected/{print $1}' | sort | paste -sd',' -
+}
+
+last_sig="$(connected_signature || true)"
+
+udevadm monitor --udev --subsystem-match=drm 2>/dev/null | while IFS= read -r line; do
+    [[ "$line" == *"change"* ]] || continue
+    # Wait briefly for EDID / HDMI handshake to settle
+    sleep 1
+    new_sig="$(connected_signature || true)"
+    if [[ -n "$new_sig" && "$new_sig" != "$last_sig" ]]; then
+        last_sig="$new_sig"
+        "$REPO/scripts/dots-monitors" --reload >/dev/null 2>&1 || true
+        if command -v dunstify >/dev/null; then
+            dunstify -a "i3dots" -r 9103 -u low \
+                "$(L "Displays updated" "Pantallas actualizadas")" \
+                "$(echo "$new_sig" | sed 's/,/ · /g')" || true
+        fi
+    fi
+done

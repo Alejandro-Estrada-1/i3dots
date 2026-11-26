@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Volume, mute and brightness keys (bound in config/i3/config).
-# Some laptops emit these keys twice within a few milliseconds (keyboard + WMI
-# hotkey driver). A press arriving less than 50 ms after the previous one of the
-# same action is ignored using flock so volume always moves by 5% (max 150%) and
-# brightness by 2%.
+# Volume, mute and brightness keys (bound in config/i3/config) with:
+#   - 50 ms flock debounce (prevents duplicate WMI hotkey events on laptops)
+#   - Minimalist Pywal-styled Dunst OSD toast with live progress bar
 #
 # Usage: dots-mediakey volume-up | volume-down | mute | mic-mute | brightness-up | brightness-down
 set -euo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+# shellcheck source=lib/common.sh
+source "$REPO/scripts/lib/common.sh"
 
 action=${1:-}
 case "$action" in
@@ -16,7 +18,7 @@ case "$action" in
     mic-mute)        cmd=(wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle) ;;
     brightness-up)   cmd=(brightnessctl -q s 2%+) ;;
     brightness-down) cmd=(brightnessctl -q s 2%-) ;;
-    *) sed -n '8p' "$0" | sed 's/^# //' >&2; exit 1 ;;
+    *) sed -n '6p' "$0" | sed 's/^# //' >&2; exit 1 ;;
 esac
 
 dir="${XDG_RUNTIME_DIR:-/tmp}/dots-mediakey"
@@ -30,3 +32,48 @@ last=$(cat "$stamp" 2>/dev/null || echo 0)
 (( now - last < 50000000 )) && exit 0
 echo "$now" >"$stamp"
 "${cmd[@]}"
+
+# --- Minimalist Pywal OSD toast via dunstify ---
+notify_osd() { # tag id title body [value]
+    local tag=$1 id=$2 title=$3 body=$4 val=${5:-}
+    command -v dunstify >/dev/null || return 0
+    if [[ -n "$val" ]]; then
+        dunstify -a "i3dots-osd" -u low -t 1500 -r "$id" \
+            -h "string:x-dunst-stack-tag:$tag" \
+            -h "int:value:$val" \
+            "$title" "$body" >/dev/null 2>&1 || true
+    else
+        dunstify -a "i3dots-osd" -u low -t 1500 -r "$id" \
+            -h "string:x-dunst-stack-tag:$tag" \
+            "$title" "$body" >/dev/null 2>&1 || true
+    fi
+}
+
+case "$action" in
+    volume-up|volume-down|mute)
+        info=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null || true)
+        pct=$(awk '{printf "%d", ($2 * 100) + 0.5}' <<<"$info")
+        bar_val=$(( pct > 100 ? 100 : pct ))
+        if [[ "$info" == *"[MUTED]"* ]]; then
+            notify_osd "osd-volume" 9101 "󰝟  $(L "Volume" "Volumen")" "$(L "Muted" "Silenciado") ($pct%)" 0
+        else
+            icon=""
+            (( pct == 0 )) && icon="" || { (( pct < 50 )) && icon=""; }
+            notify_osd "osd-volume" 9101 "$icon  $(L "Volume" "Volumen")" "$pct%" "$bar_val"
+        fi
+        ;;
+    mic-mute)
+        info=$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null || true)
+        if [[ "$info" == *"[MUTED]"* ]]; then
+            notify_osd "osd-mic" 9102 "󰍭  $(L "Microphone" "Micrófono")" "$(L "Muted" "Silenciado")"
+        else
+            notify_osd "osd-mic" 9102 "󰍬  $(L "Microphone" "Micrófono")" "$(L "Active" "Activo")"
+        fi
+        ;;
+    brightness-up|brightness-down)
+        cur=$(brightnessctl g 2>/dev/null || echo 0)
+        max=$(brightnessctl m 2>/dev/null || echo 1)
+        pct=$(( max > 0 ? (cur * 100 + max / 2) / max : 0 ))
+        notify_osd "osd-brightness" 9104 "  $(L "Brightness" "Brillo")" "$pct%" "$pct"
+        ;;
+esac

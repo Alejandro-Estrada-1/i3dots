@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Rofi clipboard history selector powered by greenclip (bound to Super + V).
+#
+# Usage:
+#   dots-clipboard           open / toggle clipboard history menu
+#   dots-clipboard --clear   clear clipboard history
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+# shellcheck source=lib/common.sh
+source "$REPO/scripts/lib/common.sh"
+
+ensure_wal_fallbacks
+
+if ! command -v greenclip >/dev/null; then
+    command -v dunstify >/dev/null && dunstify -a "i3dots" -u normal \
+        "$(L "Clipboard manager missing" "Falta el gestor de portapapeles")" \
+        "$(L "Install rofi-greenclip from the AUR." "Instala rofi-greenclip desde el AUR.")" || true
+    exit 1
+fi
+
+if [[ "${1:-}" == "--clear" ]]; then
+    greenclip clear
+    command -v dunstify >/dev/null && dunstify -a "i3dots" -u low \
+        "$(L "Clipboard" "Portapapeles")" \
+        "$(L "History cleared" "Historial limpiado")" || true
+    exit 0
+fi
+
+# Start daemon lazily if not already running
+if ! pgrep -x greenclip >/dev/null 2>&1; then
+    greenclip daemon >/dev/null 2>&1 &
+    disown || true
+    sleep 0.15
+fi
+
+if pgrep -x rofi >/dev/null; then
+    pkill -x rofi
+    exit 0
+fi
+
+rofi -modi "clipboard:greenclip print" \
+    -show clipboard \
+    -run-command '{cmd}' \
+    -theme "$DOTS_CONFIG/rofi/config.rasi" \
+    -theme-str 'prompt { content: "󰅌"; }' \
+    -p "$(L "Clipboard" "Portapapeles")" >/dev/null 2>&1 || true

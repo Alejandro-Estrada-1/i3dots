@@ -31,6 +31,7 @@ translate_desc() {
         "Open application menu (Rofi)")       printf '%s' "Abrir menú de aplicaciones (Rofi)" ;;
         "Open power menu")                    printf '%s' "Abrir menú de energía" ;;
         "Open browser (Brave)")               printf '%s' "Abrir navegador (Brave)" ;;
+        "Clipboard history (Rofi)")           printf '%s' "Historial del portapapeles (Rofi)" ;;
         "Media panel")                        printf '%s' "Panel multimedia" ;;
         "Show notification history")          printf '%s' "Mostrar historial de notificaciones" ;;
         "Close all notifications")            printf '%s' "Cerrar notificaciones" ;;
@@ -46,6 +47,9 @@ translate_desc() {
         "Toggle fullscreen")                  printf '%s' "Pantalla completa" ;;
         "Toggle floating window")             printf '%s' "Alternar ventana flotante" ;;
         "Toggle split layout")                printf '%s' "Alternar división" ;;
+        "Move window to scratchpad")          printf '%s' "Enviar ventana al scratchpad" ;;
+        "Toggle scratchpad window")           printf '%s' "Mostrar/ocultar scratchpad" ;;
+        "Resize window mode (A/D/W/S)")       printf '%s' "Modo redimensionar (A/D/W/S)" ;;
         "Focus left")                         printf '%s' "Foco a la izquierda" ;;
         "Focus right")                        printf '%s' "Foco a la derecha" ;;
         "Focus up")                           printf '%s' "Foco arriba" ;;

@@ -54,6 +54,7 @@ Any existing config in `~/.config` is automatically backed up to `~/.config/i3do
 | Shortcut | Action |
 |---|---|
 | `Super + B` | Open **Brave** browser |
+| `Super + V` | Clipboard history in **Rofi** (`dots-clipboard` / `greenclip`) |
 | `Alt + Enter` | Open **Kitty** terminal |
 | `Super + E` | Open file manager (**Thunar**) |
 | `Alt + X` | Open application launcher (**Rofi**) |
@@ -78,6 +79,8 @@ Any existing config in `~/.config` is automatically backed up to `~/.config/i3do
 | `Super + F` | Toggle fullscreen |
 | `Alt + F` | Toggle floating |
 | `Alt + S` | Toggle split layout |
+| `Super + R` | Keyboard resize mode (`A/D/W/S` or arrows, `Shift` for larger steps) |
+| `Super + Shift + -` / `Super + -` | Move window to scratchpad / toggle scratchpad |
 | `Super + A / D / W / S` | Focus left / right / up / down |
 | `Super + Shift + A / D / W / S` | Move window left / right / up / down |
 | `Super + Left / Right click` | Drag / resize floating window |
@@ -91,19 +94,19 @@ Any existing config in `~/.config` is automatically backed up to `~/.config/i3do
 
 ### Hardware & Media Keys
 
-Volume (`±5%`, max `150%`) and brightness (`±2%`) are handled through `dots-mediakey` with a 50 ms `flock` debounce to prevent duplicate WMI hotkey events on laptops. Playback keys (`XF86AudioPlay/Pause/Next/Prev`) control MPRIS players via `playerctl`.
+Volume (`±5%`, max `150%`) and brightness (`±2%`) are handled through `dots-mediakey` with a 50 ms `flock` debounce and Pywal-styled Dunst OSD progress bars. Playback keys (`XF86AudioPlay/Pause/Next/Prev`) control MPRIS players via `playerctl`.
 
 ---
 
 ## Multi-Monitor (Laptop + External HDMI)
 
-`dots-monitors` automatically detects connected X11 outputs via `xrandr`:
+`dots-monitors` automatically detects connected X11 outputs via `xrandr` (and `dots-monitor-watch` listens to kernel DRM uevents via `udevadm` for automatic HDMI hotplug):
 - Places the internal laptop display (`eDP-*` / `LVDS-*`) on the left at `0x0` using its highest refresh rate.
 - Places any connected `HDMI-*` (or other external) display to the right at its preferred resolution.
 - Binds workspaces `1–5` to the laptop and `6–10` to the external HDMI monitor (with seamless fallback to the laptop when unplugged).
 - Restores the Nitrogen wallpaper across all displays and relaunches all 3 Polybar islands per monitor.
 
-Run `dots-monitors --reload` (or press `Super + Shift + R`) after plugging/unplugging an HDMI cable.
+You can also force a refresh manually anytime with `Super + Shift + R` (`dots-monitors --reload`).
 
 ---
 

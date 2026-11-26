@@ -10,7 +10,8 @@
 #     are turned off cleanly.
 #   - Writes ~/.cache/i3dots/outputs.conf assigning workspaces 1-5 to the laptop
 #     and workspaces 6-10 to the external monitor (with fallback to laptop).
-#   - Restores Nitrogen wallpaper across all outputs and restarts Polybar.
+#   - Restores Nitrogen wallpaper across all outputs and restarts Polybar
+#     (skipped on `--init` when chained directly into `dots-pywal --restore`).
 #
 # Usage: dots-monitors [--init | --reload]
 set -euo pipefail
@@ -22,7 +23,6 @@ source "$REPO/scripts/lib/common.sh"
 MODE="${1:-}"
 mkdir -p "$DOTS_CACHE"
 
-# Find preferred mode and highest refresh rate for an xrandr output
 preferred_mode_and_rate() {
     local output=$1
     xrandr --query | awk -v out="$output" '
@@ -59,14 +59,12 @@ apply_xrandr() {
     local extras=()
     local out
 
-    # Prefer internal laptop display as primary
     for out in "${connected[@]}"; do
         if [[ -z "$laptop" && "$out" =~ ^(eDP|LVDS|DSI) ]]; then
             laptop=$out
         fi
     done
 
-    # Prefer HDMI as primary external monitor
     for out in "${connected[@]}"; do
         [[ "$out" == "$laptop" ]] && continue
         if [[ -z "$external" && "$out" =~ ^HDMI ]]; then
@@ -74,15 +72,11 @@ apply_xrandr() {
         fi
     done
 
-    # Fallback: if no internal panel (desktop), first output is primary
     if [[ -z "$laptop" ]]; then
         laptop="${connected[0]}"
-        if [[ "$external" == "$laptop" ]]; then
-            external=""
-        fi
+        [[ "$external" == "$laptop" ]] && external=""
     fi
 
-    # Fallback: pick any other non-laptop output as external
     for out in "${connected[@]}"; do
         [[ "$out" == "$laptop" || "$out" == "$external" ]] && continue
         if [[ -z "$external" ]]; then
@@ -94,7 +88,6 @@ apply_xrandr() {
 
     local cmd=(xrandr)
 
-    # Laptop / primary output at 0x0 with preferred resolution and highest refresh rate
     local pref_mode="" pref_rate=""
     read -r pref_mode pref_rate < <(preferred_mode_and_rate "$laptop" || true)
     if [[ -n "$pref_mode" && -n "$pref_rate" ]]; then
@@ -122,7 +115,6 @@ apply_xrandr() {
 
     "${cmd[@]}"
 
-    # Save detected monitor layout for scripts and i3 workspace rules
     cat >"$DOTS_CACHE/monitors.env" <<EOF
 PRIMARY_MONITOR="$laptop"
 EXTERNAL_MONITOR="$external"
@@ -148,12 +140,10 @@ EOF
 
 apply_xrandr
 
-# Ensure outputs.conf always exists (even if invoked headless)
 if [[ ! -f "$DOTS_CACHE/outputs.conf" ]]; then
     echo "# Waiting for X11 display detection by dots-monitors" >"$DOTS_CACHE/outputs.conf"
 fi
 
-# Restore wallpaper across every connected screen with Nitrogen
 if [[ -n "${DISPLAY:-}" ]] && command -v nitrogen >/dev/null; then
     if [[ -f "$DOTS_CONFIG/nitrogen/bg-saved.cfg" ]]; then
         nitrogen --restore >/dev/null 2>&1 || true
@@ -162,12 +152,13 @@ if [[ -n "${DISPLAY:-}" ]] && command -v nitrogen >/dev/null; then
     fi
 fi
 
-# Reload i3 so updated workspace->output bindings apply
-if [[ "$MODE" == "--reload" ]] && command -v i3-msg >/dev/null && [[ -n "${DISPLAY:-}" ]]; then
-    i3-msg reload >/dev/null 2>&1 || true
-fi
-
-# Relaunch the 3 floating bottom Polybar islands on every connected monitor
-if [[ -n "${DISPLAY:-}" ]] && command -v polybar >/dev/null; then
-    "$REPO/scripts/dots-polybar" restart
+# On --init (chained into `dots-pywal --restore`), let dots-pywal reload i3
+# and launch Polybar once with the active palette to eliminate startup flicker.
+if [[ "$MODE" != "--init" ]]; then
+    if [[ "$MODE" == "--reload" ]] && command -v i3-msg >/dev/null && [[ -n "${DISPLAY:-}" ]]; then
+        i3-msg reload >/dev/null 2>&1 || true
+    fi
+    if [[ -n "${DISPLAY:-}" ]] && command -v polybar >/dev/null; then
+        "$REPO/scripts/dots-polybar" restart
+    fi
 fi

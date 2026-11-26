@@ -69,6 +69,8 @@ bindsym $alt+x exec --no-startup-id rofi -show drun
 bindsym $alt+z exec --no-startup-id $bin/dots-powermenu
 # @bind Open browser (Brave) | Super + B
 bindsym $mod+b exec --no-startup-id brave
+# @bind Clipboard history (Rofi) | Super + V
+bindsym $mod+v exec --no-startup-id $bin/dots-clipboard
 # @bind Media panel | Super + P
 bindsym $mod+p exec --no-startup-id $bin/dots-media
 # @bind Show notification history | Super + N
@@ -103,6 +105,32 @@ bindsym $mod+f fullscreen toggle
 bindsym $alt+f floating toggle
 # @bind Toggle split layout | Alt + S
 bindsym $alt+s layout toggle split
+# @bind Move window to scratchpad | Super + Shift + -
+bindsym $mod+Shift+minus move scratchpad
+# @bind Toggle scratchpad window | Super + -
+bindsym $mod+minus scratchpad show
+# @bind Resize window mode (A/D/W/S) | Super + R
+bindsym $mod+r mode "resize"
+
+mode "resize" {
+    bindsym a resize shrink width 10 px or 5 ppt
+    bindsym d resize grow width 10 px or 5 ppt
+    bindsym w resize shrink height 10 px or 5 ppt
+    bindsym s resize grow height 10 px or 5 ppt
+    bindsym Shift+a resize shrink width 30 px or 10 ppt
+    bindsym Shift+d resize grow width 30 px or 10 ppt
+    bindsym Shift+w resize shrink height 30 px or 10 ppt
+    bindsym Shift+s resize grow height 30 px or 10 ppt
+
+    bindsym Left resize shrink width 10 px or 5 ppt
+    bindsym Right resize grow width 10 px or 5 ppt
+    bindsym Up resize shrink height 10 px or 5 ppt
+    bindsym Down resize grow height 10 px or 5 ppt
+
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+    bindsym $mod+r mode "default"
+}
 
 # ==============================================================================
 # KEYBINDS — Focus & Window Movement (WASD)
@@ -241,12 +269,18 @@ for_window [window_type="dialog|menu"] floating enable
 exec --no-startup-id dbus-update-activation-environment --systemd DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP=i3
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 
-# Keyboard layout, repeat rate and mouse acceleration
+# Keyboard layout, repeat rate, laptop touchpad tapping and mouse acceleration
 exec_always --no-startup-id $bin/dots-input
 
-# Multi-monitor HDMI layout, Nitrogen wallpaper restore, Pywal sync & 3-island Polybar
-exec --no-startup-id $bin/dots-monitors --init
-exec --no-startup-id $bin/dots-pywal --restore
+# Sequential startup: configure HDMI layout & Nitrogen first, then restore Pywal
+# and launch Polybar once (prevents startup race conditions / duplicate bars)
+exec --no-startup-id sh -c '$HOME/.local/bin/dots-monitors --init && $HOME/.local/bin/dots-pywal --restore'
+
+# Automatic HDMI hotplug watcher (zero-dependency udevadm DRM listener)
+exec --no-startup-id $bin/dots-monitor-watch
+
+# Clipboard history daemon (greenclip)
+exec --no-startup-id sh -c 'command -v greenclip >/dev/null && (pgrep -x greenclip >/dev/null || greenclip daemon)'
 
 # Compositor (dual-kawase frosted glass blur) & notifications
 exec_always --no-startup-id sh -c 'pgrep -x picom >/dev/null || picom --config ~/.config/picom/picom.conf -b'

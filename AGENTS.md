@@ -52,7 +52,14 @@ Diseño minimalista, limpio y atmosférico tipo *frosted glass* oscuro con palet
   - Todos siguen la misma gramática visual de las islas de Polybar: fondo oscuro translúcido con blur, borde fino `1px` en color Pywal, `radius = 3px`, fuente `JetBrainsMono Nerd Font`.
 - **Integración `nitrogen` + `pywal`:**
   - `nitrogen` gestiona el fondo en todos los monitores; `pywal` se ejecuta con `-n` (sin pisar a Nitrogen) y regenera todas las plantillas + Xresources + recarga en vivo de i3, Polybar, Kitty, Dunst y Cava.
-  - Wallpaper por defecto incluido en `wallpapers/mountain-lake.jpg` inspirado en la captura del lago alpino para que la paleta Pywal inicial reproduzca fielmente los tonos de las imágenes de referencia.
+  - Wallpapers incluidos en `wallpapers/`: `mountain-lake.jpg` (por defecto, lago alpino), `misty-pines.jpg`, `arctic-dusk.jpg` y `amber-dusk.jpg`.
+- **Ergonomía y acabados adicionales de X11 / i3:**
+  - Arranque secuencial en i3 (`dots-monitors --init && dots-pywal --restore`) + `flock` en `dots-polybar` para evitar *race conditions* o barras duplicadas.
+  - Tema GTK oscuro coherente (`config/gtk-3.0/settings.ini`, `config/gtk-4.0/settings.ini` con `Adwaita-dark` + `Papirus-Dark` + `gsettings`).
+  - Tap-to-click y *disable-while-typing* para touchpad en `dots-input` (`libinput` vía `xinput`).
+  - Soporte para `startx` (`home/.xinitrc` + `xorg-server`/`xorg-xinit` en `packages/pacman.txt`).
+  - Notificaciones OSD de volumen y brillo vía `dunstify` con barra de progreso en `dots-mediakey`.
+  - Modo de redimensionado por teclado (`Super + R`), *scratchpad* (`Super + -` / `Super + Shift + -`), hotplug automático HDMI sin dependencias extra (`dots-monitor-watch` vía `udevadm`) e historial del portapapeles con Rofi (`Super + V` → `dots-clipboard` con `greenclip`).
 
 ---
 

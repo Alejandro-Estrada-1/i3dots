@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Applies X11 keyboard layout, key repeat rate and flat pointer acceleration
-# from ~/.config/i3dots/settings (mirrors Hyprland modules/input.lua).
+# Applies X11 keyboard layout, key repeat rate, laptop touchpad tap-to-click
+# and flat pointer acceleration from ~/.config/i3dots/settings.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
@@ -25,10 +25,22 @@ if command -v xset >/dev/null; then
     xset r rate 200 50 2>/dev/null || true
 fi
 
-# Apply flat acceleration profile to pointer devices when supported
+# Pointer & laptop touchpad ergonomics via xinput / libinput
 if command -v xinput >/dev/null; then
     while IFS= read -r id; do
         [[ -n "$id" ]] || continue
-        xinput --set-prop "$id" "libinput Accel Profile Enabled" 0, 1 2>/dev/null || true
+        props=$(xinput list-props "$id" 2>/dev/null || true)
+        # Flat acceleration profile for mice/pointers
+        if grep -q "libinput Accel Profile Enabled" <<<"$props"; then
+            xinput --set-prop "$id" "libinput Accel Profile Enabled" 0, 1 2>/dev/null || true
+        fi
+        # Touchpad: enable tap-to-click, tap-and-drag and disable-while-typing;
+        # keep standard scroll direction (matches Hyprland natural_scroll = false)
+        if grep -q "libinput Tapping Enabled (" <<<"$props"; then
+            xinput --set-prop "$id" "libinput Tapping Enabled" 1 2>/dev/null || true
+            xinput --set-prop "$id" "libinput Tapping Drag Enabled" 1 2>/dev/null || true
+            xinput --set-prop "$id" "libinput Disable While Typing Enabled" 1 2>/dev/null || true
+            xinput --set-prop "$id" "libinput Natural Scrolling Enabled" 0 2>/dev/null || true
+        fi
     done < <(xinput list --id-only 2>/dev/null || true)
 fi
