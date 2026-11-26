@@ -112,6 +112,6 @@ También puedes forzar la actualización manualmente en cualquier momento con `S
 
 ## Flujo Nitrogen + Pywal
 
-Pulsa `Alt + W` para abrir **Nitrogen**, elige tu fondo, pulsa **Apply** y cierra la ventana: `dots-wallpaper` ejecuta automáticamente `dots-pywal` (`wal -n`) y actualiza al instante los bordes de i3, Polybar, Kitty, Rofi, Dunst, Cava, `dots-media` y `i3lock-color`.
+Pulsa `Alt + W` para abrir **Nitrogen**, elige tu fondo y pulsa **Apply**: la ventana se cierra sola y `dots-wallpaper` ejecuta automáticamente `dots-pywal` (`wal -n`) y actualiza al instante los bordes de i3, Polybar, Kitty, Rofi, Dunst, Cava, `dots-media` y `i3lock-color`.
 
 Nitrogen (y `dots-wallpaper --random`) muestran tanto la carpeta `wallpapers/` del repo como tu carpeta de Imágenes de XDG (`~/Imágenes`, `~/Pictures`, incluidas subcarpetas): basta con copiar ahí la imagen. También puedes aplicar cualquier imagen directamente con `dots-wallpaper /ruta/imagen.jpg`.

@@ -112,6 +112,6 @@ You can also force a refresh manually anytime with `Super + Shift + R` (`dots-mo
 
 ## Nitrogen + Pywal Workflow
 
-Press `Alt + W` to open **Nitrogen**, select your wallpaper, click **Apply**, and close Nitrogen — `dots-wallpaper` automatically invokes `dots-pywal` (`wal -n`), updating i3 borders, Polybar, Kitty, Rofi, Dunst, Cava, `dots-media`, and `i3lock-color` in real time without dirtying the repository.
+Press `Alt + W` to open **Nitrogen**, select your wallpaper and click **Apply** — the picker closes by itself and `dots-wallpaper` automatically invokes `dots-pywal` (`wal -n`), updating i3 borders, Polybar, Kitty, Rofi, Dunst, Cava, `dots-media`, and `i3lock-color` in real time without dirtying the repository.
 
 Nitrogen (and `dots-wallpaper --random`) browse both the repo's `wallpapers/` folder and your XDG Pictures folder (`~/Imágenes`, `~/Pictures`, including subfolders): just drop an image there. You can also apply any image directly with `dots-wallpaper /path/to/image.jpg`.

@@ -17,17 +17,39 @@ case "${1:-}" in
         exec "$REPO/scripts/dots-pywal" --random
         ;;
     "")
-        before="$(nitrogen_current_wallpaper)"
-        before_mtime=$(stat -c %Y "$DOTS_CONFIG/nitrogen/bg-saved.cfg" 2>/dev/null || echo 0)
+        # Single picker instance: pressing Alt + W again closes the open picker
+        exec 9>"${XDG_RUNTIME_DIR:-/tmp}/dots-wallpaper.lock"
+        if ! flock -n 9; then
+            pkill -f '^nitrogen$' 2>/dev/null || true
+            exit 0
+        fi
 
-        # Open Nitrogen (browsing every folder from nitrogen.cfg) to pick a wallpaper
+        saved="$DOTS_CONFIG/nitrogen/bg-saved.cfg"
+        stamp() { stat -c '%.9Y %s %i' "$saved" 2>/dev/null || echo none; }
+        before="$(nitrogen_current_wallpaper)"
+        before_stamp="$(stamp)"
+
+        # Open Nitrogen (browsing every folder from nitrogen.cfg) to pick a wallpaper.
+        # Nitrogen stays open after "Apply" (it only rewrites bg-saved.cfg), so watch
+        # that file and close the picker as soon as a wallpaper has been applied.
         sync_nitrogen_dirs
-        nitrogen >/dev/null 2>&1 || true
+        nitrogen >/dev/null 2>&1 9>&- &
+        nitrogen_pid=$!
+        while kill -0 "$nitrogen_pid" 2>/dev/null; do
+            if [[ "$(stamp)" != "$before_stamp" ]]; then
+                sleep 0.2   # let Nitrogen finish writing the file
+                kill "$nitrogen_pid" 2>/dev/null || true
+                break
+            fi
+            sleep 0.25
+        done
+        wait "$nitrogen_pid" 2>/dev/null || true
+        exec 9>&-
 
         after="$(nitrogen_current_wallpaper)"
-        after_mtime=$(stat -c %Y "$DOTS_CONFIG/nitrogen/bg-saved.cfg" 2>/dev/null || echo 0)
+        after_stamp="$(stamp)"
 
-        if [[ -f "$after" && ( "$after" != "$before" || "$after_mtime" != "$before_mtime" ) ]]; then
+        if [[ -f "$after" && ( "$after" != "$before" || "$after_stamp" != "$before_stamp" ) ]]; then
             "$REPO/scripts/dots-pywal" --image "$after"
             command -v notify-send >/dev/null && notify-send "i3dots · Nitrogen + Pywal" "$(basename "$after")" || true
         fi
