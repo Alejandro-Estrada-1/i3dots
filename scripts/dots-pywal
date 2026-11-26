@@ -72,6 +72,10 @@ apply_live_desktop() {
         disown || true
     fi
 
+    # Pre-render the blurred lockscreen background for the new wallpaper (instant Super + L)
+    "$REPO/scripts/dots-lock" --prepare >/dev/null 2>&1 9>&- &
+    disown 2>/dev/null || true
+
     # Reload i3 borders & restart 3-island Polybar
     if [[ -n "${DISPLAY:-}" ]]; then
         command -v i3-msg >/dev/null && i3-msg reload >/dev/null 2>&1 || true

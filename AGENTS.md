@@ -52,6 +52,7 @@ Diseño minimalista, limpio y atmosférico tipo *frosted glass* oscuro con palet
   - Colores de Kitty, `cava`, `rofi`, `dunst`, `dots-media` y `i3lock-color` sincronizados automáticamente mediante plantillas de Pywal (`~/.config/wal/templates/`).
 - **Launcher (`rofi`), notificaciones (`dunst`), lockscreen (`i3lock-color`) y centro multimedia (`dots-media`):**
   - Todos siguen la misma gramática visual de las islas de Polybar: fondo oscuro translúcido con blur, borde fino `1px` en color Pywal, `radius = 3px`, fuente `JetBrainsMono Nerd Font`.
+  - **Lockscreen (`dots-lock`, equivalente X11 de `hyprlock`):** `i3lock-color` (detectado por `i3lock --version` con `.c.`; `--help` no lista sus opciones). Fondo = wallpaper activo de Nitrogen ajustado por monitor, desenfocado y oscurecido con ImageMagick, cacheado en `~/.cache/i3dots/lock/` (`dots-lock --prepare`, ejecutado por `dots-pywal` al cambiar de fondo). Reloj `%H:%M` grande (96) + fecha según el locale (22), anillo fino Pywal (radio 30, 2px; acento al verificar, urgente al fallar), texto guía, aviso de Bloq Mayús, `--ignore-empty-password`.
 - **Integración `nitrogen` + `pywal`:**
   - `nitrogen` gestiona el fondo en todos los monitores; `pywal` se ejecuta con `-n` (sin pisar a Nitrogen) y regenera todas las plantillas + Xresources + recarga en vivo de i3, Polybar, Kitty, Dunst y Cava.
   - Wallpapers incluidos en `wallpapers/`: `mountain-lake.jpg` (por defecto, lago alpino), `misty-pines.jpg`, `arctic-dusk.jpg` y `amber-dusk.jpg`.

@@ -12,3 +12,7 @@ fi
 
 # Machine-specific settings
 [[ -f ~/.zprofile.local ]] && source ~/.zprofile.local
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/ale/.local/bin:$PATH"

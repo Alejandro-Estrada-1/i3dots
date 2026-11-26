@@ -55,3 +55,10 @@ fi
 
 # --- Machine-specific settings ---
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/ale/.local/bin:$PATH"
+
+# opencode
+export PATH=/home/ale/.opencode/bin:$PATH

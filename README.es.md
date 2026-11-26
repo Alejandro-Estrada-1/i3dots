@@ -64,7 +64,7 @@ Cualquier archivo previo en `~/.config` se respalda automáticamente en `~/.conf
 | `Alt + W` | Cambiar fondo (**Nitrogen** + sincronización automática con **Pywal**) |
 | `Alt + C` | Abrir menú de **Pywal** (recargar, aleatorio, modo claro/oscuro, backends) |
 | `Super + Shift + K` | Visor interactivo de atajos |
-| `Super + L` | Bloquear pantalla (`i3lock-color` con colores Pywal) |
+| `Super + L` | Bloquear pantalla (`i3lock-color` estilo hyprlock: fondo actual desenfocado, reloj grande + fecha, anillo Pywal) |
 | `Super + K` / `Super + J` | Ocultar / mostrar Polybar (ajusta automáticamente el espacio inferior) |
 | `Super + Shift + R` | Actualizar disposición de monitores HDMI y recargar i3 |
 | `Print` | Captura de pantalla (`flameshot gui -c`) |

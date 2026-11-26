@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
-# Pywal-themed X11 lockscreen using i3lock-color (with graceful i3lock fallback).
-# Bound to Super + L and xss-lock.
+# Pywal-themed X11 lockscreen (hyprlock equivalent) built on i3lock-color.
+# Bound to Super + L and used by xss-lock.
+#
+#   - Background: the active Nitrogen wallpaper, zoom-filled per monitor,
+#     blurred and dimmed (cached in ~/.cache/i3dots/lock/ so locking is instant)
+#   - Big clock + date (system locale), thin Pywal ring for password feedback,
+#     Caps Lock warning, empty Enter ignored
+#
+# Usage:
+#   dots-lock             lock the screen
+#   dots-lock --prepare   only (re)build the cached background (run after wallpaper changes)
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 # shellcheck source=lib/common.sh
 source "$REPO/scripts/lib/common.sh"
 
-# Default alpine-teal palette (overridden by Pywal template)
+# Default alpine-teal palette (overridden by the Pywal template)
 WAL_BG="0b1518"
 WAL_FG="cdd8d5"
 WAL_ACCENT="7b9391"
@@ -18,45 +27,127 @@ WAL_URGENT="b86f6b"
 # shellcheck disable=SC1091
 [[ -r "$WAL_CACHE/lock-colors.sh" ]] && source "$WAL_CACHE/lock-colors.sh"
 
-command -v i3lock >/dev/null || exit 0
+LOCK_CACHE="$DOTS_CACHE/lock"
+FONT="JetBrainsMono Nerd Font"
 
-# Detect i3lock-color features; fallback cleanly to plain i3lock if unavailable
-if i3lock --help 2>&1 | grep -q -- '--ring-color'; then
-    exec i3lock \
-        --nofork \
-        --blur=7 \
-        --clock \
-        --indicator \
-        --radius=110 \
-        --ring-width=4 \
-        --time-str="%H:%M" \
-        --date-str="%A, %d %B" \
-        --time-font="JetBrainsMono Nerd Font" \
-        --date-font="JetBrainsMono Nerd Font" \
-        --verif-font="JetBrainsMono Nerd Font" \
-        --wrong-font="JetBrainsMono Nerd Font" \
-        --time-size=32 \
-        --date-size=13 \
-        --time-color="${WAL_FG}ff" \
-        --date-color="${WAL_ACCENT}ff" \
-        --inside-color="${WAL_BG}cc" \
-        --ring-color="${WAL_BORDER}cc" \
-        --insidever-color="${WAL_BG}dd" \
-        --ringver-color="${WAL_ACCENT}ff" \
-        --insidewrong-color="${WAL_BG}dd" \
-        --ringwrong-color="${WAL_URGENT}ff" \
-        --line-uses-inside \
-        --keyhl-color="${WAL_FG}ff" \
-        --bshl-color="${WAL_URGENT}ff" \
-        --separator-color="${WAL_MUTED}ff" \
-        --verif-color="${WAL_FG}ff" \
-        --wrong-color="${WAL_URGENT}ff" \
-        --verif-text="" \
-        --wrong-text="" \
-        --noinput-text="" \
-        --pass-media-keys \
-        --pass-volume-keys \
-        --pass-screen-keys
-else
+# Monitor layout as "WxH+X+Y" lines (falls back to the whole X screen)
+monitor_layout() {
+    local layout=""
+    if command -v xrandr >/dev/null; then
+        layout=$(xrandr --listmonitors 2>/dev/null |
+            awk 'NR>1 {split($3,g,/[x+]/); split(g[1],w,"/"); split(g[2],h,"/"); print w[1] "x" h[1] "+" g[3] "+" g[4]}')
+        [[ -n "$layout" ]] || layout=$(xrandr 2>/dev/null | awk '/current/ {gsub(",",""); print $8 "x" $10 "+0+0"; exit}')
+    fi
+    printf '%s\n' "${layout:-1920x1080+0+0}"
+}
+
+# Prints the cached blurred background for the current wallpaper + layout, building it if needed
+lock_background() {
+    local im wall layout key out tmp sw=0 sh=0 geo w h x y
+    if command -v magick >/dev/null; then im=(magick)
+    elif command -v convert >/dev/null; then im=(convert)
+    else return 1
+    fi
+
+    wall="$(nitrogen_current_wallpaper)"
+    [[ -f "$wall" ]] || return 1
+    layout="$(monitor_layout)"
+    key=$(printf '%s|%s|%s|%s|v2' "$wall" "$(stat -c %Y "$wall")" "$layout" "$WAL_BG" | md5sum | cut -c1-16)
+    out="$LOCK_CACHE/$key.png"
+    if [[ -s "$out" ]]; then
+        printf '%s' "$out"
+        return 0
+    fi
+
+    mkdir -p "$LOCK_CACHE"
+    tmp=$(mktemp -d)
+    while IFS= read -r geo; do
+        IFS='x+' read -r w h x y <<<"$geo"
+        (( x + w > sw )) && sw=$(( x + w ))
+        (( y + h > sh )) && sh=$(( y + h ))
+    done <<<"$layout"
+
+    local args=(-size "${sw}x${sh}" "xc:#$WAL_BG")
+    local i=0
+    while IFS= read -r geo; do
+        IFS='x+' read -r w h x y <<<"$geo"
+        # Zoom-fill like Nitrogen, then a cheap strong blur (downscale -> blur -> upscale)
+        "${im[@]}" -define jpeg:size="$((w * 2))x$((h * 2))" "$wall" \
+            -resize "${w}x${h}^" -gravity center -extent "${w}x${h}" \
+            -filter Gaussian -resize 12% -blur 0x6 -resize "${w}x${h}!" \
+            -fill "#$WAL_BG" -colorize 32% \
+            "$tmp/$i.png"
+        args+=("$tmp/$i.png" -geometry "+$x+$y" -composite)
+        i=$(( i + 1 ))
+    done <<<"$layout"
+    "${im[@]}" "${args[@]}" "$tmp/out.png"
+    mv "$tmp/out.png" "$out"
+    rm -rf "$tmp"
+
+    # Keep only the newest few cached backgrounds
+    find "$LOCK_CACHE" -name '*.png' -printf '%T@ %p\n' | sort -rn | tail -n +6 | cut -d' ' -f2- | xargs -r rm -f
+    printf '%s' "$out"
+}
+
+if [[ "${1:-}" == "--prepare" ]]; then
+    lock_background >/dev/null || true
+    exit 0
+fi
+
+command -v i3lock >/dev/null || exit 0
+pgrep -x i3lock >/dev/null && exit 0   # already locked
+
+# i3lock-color reports versions like "2.13.c.5" (`--help` does not list its options)
+if ! i3lock --version 2>&1 | grep -q '\.c\.'; then
     exec i3lock --nofork --color="$WAL_BG"
 fi
+
+bg_args=(--color="${WAL_BG}")
+if bg="$(lock_background 2>/dev/null)" && [[ -s "$bg" ]]; then
+    bg_args=(--image="$bg")
+else
+    bg_args+=(--blur=8)
+fi
+
+exec i3lock \
+    --nofork \
+    "${bg_args[@]}" \
+    --ignore-empty-password \
+    --show-failed-attempts \
+    --pass-media-keys --pass-volume-keys --pass-screen-keys \
+    \
+    --clock --indicator \
+    --time-str="%H:%M" \
+    --date-str="%A, %d %B %Y" \
+    --time-font="$FONT" --date-font="$FONT" \
+    --greeter-font="$FONT" --verif-font="$FONT" --wrong-font="$FONT" \
+    --layout-font="$FONT" \
+    --time-size=96 --date-size=22 \
+    --time-color="${WAL_FG}ff" \
+    --date-color="${WAL_FG}dd" \
+    --time-pos="x+w/2:y+h/2-60" \
+    --date-pos="tx:ty+52" \
+    \
+    --ind-pos="x+w/2:y+h/2+90" \
+    --radius=30 --ring-width=2 \
+    --inside-color="${WAL_BG}b3" \
+    --ring-color="${WAL_BORDER}cc" \
+    --line-uses-inside \
+    --separator-color="00000000" \
+    --keyhl-color="${WAL_ACCENT}ff" \
+    --bshl-color="${WAL_URGENT}ff" \
+    --insidever-color="${WAL_BG}d9" \
+    --ringver-color="${WAL_ACCENT}ff" \
+    --insidewrong-color="${WAL_BG}d9" \
+    --ringwrong-color="${WAL_URGENT}ff" \
+    --verif-text="" --wrong-text="" --noinput-text="" \
+    --lock-text="" --lockfailed-text="" \
+    --verif-color="${WAL_FG}ff" --wrong-color="${WAL_URGENT}ff" --wrong-size=14 \
+    \
+    --greeter-text="$(L "Type your password" "Escribe tu contraseña")" \
+    --greeter-color="${WAL_FG}b3" \
+    --greeter-size=13 \
+    --greeter-pos="ix:iy+62" \
+    --modif-color="${WAL_URGENT}ff" \
+    --modif-size=12 \
+    --modif-pos="ix:iy+86"

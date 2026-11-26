@@ -64,7 +64,7 @@ Any existing config in `~/.config` is automatically backed up to `~/.config/i3do
 | `Alt + W` | Change wallpaper (**Nitrogen** + automatic **Pywal** sync) |
 | `Alt + C` | Open **Pywal** theme & backend menu |
 | `Super + Shift + K` | Interactive keybinds cheatsheet |
-| `Super + L` | Lock screen (`i3lock-color` with Pywal colors) |
+| `Super + L` | Lock screen (`i3lock-color`, hyprlock-style: blurred current wallpaper, big clock + date, Pywal ring) |
 | `Super + K` / `Super + J` | Hide / show floating bottom Polybar (dynamically adjusts bottom gap) |
 | `Super + Shift + R` | Refresh HDMI monitor layout and reload i3 |
 | `Print` | Screenshot (`flameshot gui -c`) |
