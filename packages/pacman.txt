@@ -72,3 +72,4 @@ file-roller
 gvfs
 gvfs-mtp
 kcalc
+xorg-xprop

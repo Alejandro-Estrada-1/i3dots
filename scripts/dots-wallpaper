@@ -30,16 +30,40 @@ case "${1:-}" in
         before_stamp="$(stamp)"
 
         # Open Nitrogen (browsing every folder from nitrogen.cfg) to pick a wallpaper.
-        # Nitrogen stays open after "Apply" (it only rewrites bg-saved.cfg), so watch
-        # that file and close the picker as soon as a wallpaper has been applied.
+        # Nitrogen 1.6 never closes by itself:
+        #   - Enter / double-click only *previews* (sets the root pixmap, no save)
+        #   - "Apply" saves bg-saved.cfg but keeps the window open
+        # So: watch root-pixmap property events (xprop -spy prints one line per
+        # set, even when the pixmap id is reused); on a preview, press Nitrogen's
+        # own Apply (Alt+A) so it saves; once bg-saved.cfg changes, close it.
         sync_nitrogen_dirs
+        spy_log="${XDG_RUNTIME_DIR:-/tmp}/dots-wallpaper-spy.$$"
+        : >"$spy_log"
+        spy_pid=""
+        if command -v xprop >/dev/null; then
+            xprop -root -spy _XROOTPMAP_ID >"$spy_log" 2>/dev/null 9>&- &
+            spy_pid=$!
+        fi
+        trap 'rm -f "$spy_log"; [[ -n "$spy_pid" ]] && kill "$spy_pid" 2>/dev/null; true' EXIT
+
         nitrogen >/dev/null 2>&1 9>&- &
         nitrogen_pid=$!
+        sleep 0.3
+        seen=$(wc -l <"$spy_log")   # first line = current value, not a preview
+        (( seen > 0 )) || seen=1
         while kill -0 "$nitrogen_pid" 2>/dev/null; do
             if [[ "$(stamp)" != "$before_stamp" ]]; then
                 sleep 0.2   # let Nitrogen finish writing the file
                 kill "$nitrogen_pid" 2>/dev/null || true
                 break
+            fi
+            events=$(wc -l <"$spy_log")
+            if (( events > seen )) && command -v xdotool >/dev/null; then
+                seen=$events
+                win=$(xdotool search --pid "$nitrogen_pid" --onlyvisible 2>/dev/null | head -n 1 || true)
+                if [[ -n "$win" ]]; then
+                    xdotool windowactivate --sync "$win" key --clearmodifiers alt+a 2>/dev/null || true
+                fi
             fi
             sleep 0.25
         done
